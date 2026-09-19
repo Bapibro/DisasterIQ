@@ -15,7 +15,24 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
-  const { signIn: supabaseSignIn, signUp: supabaseSignUp } = useAuth();
+  const { signIn: supabaseSignIn, signUp: supabaseSignUp, signInWithGoogle: supabaseSignInWithGoogle } = useAuth();
+
+  const handleGoogleAuth = async () => {
+    clearAlerts();
+    setIsLoading(true);
+    try {
+      await supabaseSignInWithGoogle();
+    } catch (err: any) {
+      setErrorDetails({
+        message: err.message || 'Failed to initialize Google Authentication.',
+        status: err.status,
+        code: err.code,
+        name: err.name,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [showPassword, setShowPassword] = useState(false);
@@ -119,32 +136,6 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         code: err.code,
         name: err.name,
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-    try {
-      const defaultName = role === 'teacher' ? 'Prof. Harrison Miller' : 'Alex Vance';
-      const defaultEmail = role === 'teacher' ? 'h.miller@nit.edu' : 'alex.vance@gmail.com';
-      await supabaseSignUp(defaultEmail, 'GoogleAuthPassword123!', defaultName, role);
-      onSuccessLogin({ name: defaultName, email: defaultEmail, role });
-      setSuccessMessage(`Signed in with Google as ${role === 'teacher' ? 'Faculty' : 'Student'}!`);
-      setTimeout(() => {
-        onClose();
-        setSuccessMessage('');
-      }, 800);
-    } catch {
-      // fallback
-      const defaultName = role === 'teacher' ? 'Prof. Harrison Miller' : 'Alex Vance';
-      onSuccessLogin({ name: defaultName, email: role === 'teacher' ? 'h.miller@nit.edu' : 'alex.vance@gmail.com', role });
-      setSuccessMessage(`Signed in as ${role === 'teacher' ? 'Faculty' : 'Student'}!`);
-      setTimeout(() => {
-        onClose();
-        setSuccessMessage('');
-      }, 800);
     } finally {
       setIsLoading(false);
     }

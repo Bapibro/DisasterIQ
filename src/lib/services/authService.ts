@@ -96,6 +96,39 @@ export const authService = {
     };
   },
 
+  async signInWithGoogle() {
+    if (!isSupabaseConfigured()) {
+      const configErr = new Error('Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are missing in this deployment. Please add them under Vercel Project Settings > Environment Variables.');
+      (configErr as any).status = 400;
+      (configErr as any).code = 'MISSING_ENV_VARS';
+      (configErr as any).name = 'SupabaseConfigError';
+      throw configErr;
+    }
+
+    const redirectUrl = getAuthRedirectUrl();
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
+
+    if (error) {
+      const authErr = new Error(error.message);
+      (authErr as any).status = error.status || 400;
+      (authErr as any).code = error.code || 'GOOGLE_AUTH_ERROR';
+      (authErr as any).name = error.name || 'AuthApiError';
+      throw authErr;
+    }
+
+    return data;
+  },
+
   async signIn(email: string, password: string) {
     if (!isSupabaseConfigured()) {
       const configErr = new Error('Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are missing in this deployment. Please add them under Vercel Project Settings > Environment Variables.');
@@ -164,8 +197,8 @@ export const authService = {
         const p = JSON.parse(savedProfile);
         return {
           id: userId || 'local-user-id',
-          full_name: p.fullName || userObj.name || 'Alex Vance',
-          email: p.email || userObj.email || 'alex.vance@gmail.com',
+          full_name: p.fullName || userObj.name || 'DisasterIQ User',
+          email: p.email || userObj.email || 'user@disasteriq.app',
           phone: p.phone,
           college: p.college,
           course: p.course,
@@ -179,8 +212,8 @@ export const authService = {
 
     return {
       id: userId || 'local-user-id',
-      full_name: userObj.name || 'Alex Vance',
-      email: userObj.email || 'alex.vance@gmail.com',
+      full_name: userObj.name || 'DisasterIQ User',
+      email: userObj.email || 'user@disasteriq.app',
       role: userObj.role || 'student',
     };
   },

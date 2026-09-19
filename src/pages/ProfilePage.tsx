@@ -52,19 +52,19 @@ interface ProfileData {
 }
 
 const DEFAULT_PROFILE: ProfileData = {
-  fullName: 'Alex Vance',
-  email: 'alex.vance@gmail.com',
-  phone: '+1 (555) 234-5678',
-  college: 'National Institute of Technology',
-  course: 'Computer Science & Engineering',
-  year: '3rd Year',
-  city: 'San Francisco, CA',
-  emergencyName: 'Sarah Vance (Mother)',
-  emergencyPhone: '+1 (555) 987-6543',
+  fullName: 'Student User',
+  email: 'student@example.com',
+  phone: '',
+  college: 'DisasterIQ Institute',
+  course: 'Disaster Preparedness',
+  year: '1st Year',
+  city: '',
+  emergencyName: '',
+  emergencyPhone: '',
   bloodGroup: 'O+',
-  medicalNotes: 'Asthma - Inhaler kept in Go-Bag side pocket.',
-  allergies: 'Penicillin, Peanuts',
-  specialNeeds: 'Requires corrective lenses / glasses.',
+  medicalNotes: '',
+  allergies: '',
+  specialNeeds: '',
   memberSince: 'September 2026',
 };
 
