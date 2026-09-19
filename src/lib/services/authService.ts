@@ -31,6 +31,13 @@ const LOCAL_STORAGE_KEYS = {
   PROFILE: 'readysphere_profile_v1',
 };
 
+const getAuthRedirectUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    return window.location.origin;
+  }
+  return 'https://disaster-iq-nine.vercel.app';
+};
+
 export const authService = {
   async signUp(email: string, password: string, fullName: string, _roleRequested: UserRole = 'student') {
     const role: UserRole = 'student'; // Always force student role per requirements
@@ -47,6 +54,7 @@ export const authService = {
       email,
       password,
       options: {
+        emailRedirectTo: getAuthRedirectUrl(),
         data: {
           full_name: fullName,
           role,
