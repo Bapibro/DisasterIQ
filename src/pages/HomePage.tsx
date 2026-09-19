@@ -77,6 +77,8 @@ export function HomePage() {
         smoothing={0.08}
         overlayScrim={0.5}
         enabled={true}
+        mediaUrl="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=2400&q=85"
+        mediaType="image"
         title="Prepare Before It Happens"
         scrollHint="Scroll to explore"
         expandedTitle="Learn. Prepare. Respond."
