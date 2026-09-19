@@ -24,6 +24,54 @@ export const profileService = {
     return null;
   },
 
+  async ensureProfile(
+    userId: string,
+    email: string,
+    fullName: string,
+    _roleRequested?: UserProfile['role']
+  ): Promise<UserProfile> {
+    if (!isSupabaseConfigured() || !userId || userId === 'local-user-id') {
+      return {
+        id: userId || 'local-user-id',
+        full_name: fullName,
+        email,
+        role: 'student',
+      };
+    }
+
+    // 1. Check if profile already exists (e.g. created automatically by DB trigger)
+    const existing = await this.getProfile(userId);
+    if (existing) {
+      return existing;
+    }
+
+    // 2. If not found, create row in public.profiles using authenticated user ID
+    const newProfileData = {
+      id: userId,
+      full_name: fullName,
+      email: email,
+      role: 'student' as const, // Always default to student per requirements
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(newProfileData, { onConflict: 'id' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to create profile in public.profiles:', error.message);
+      throw new Error(`Profile creation failed: ${error.message}`);
+    }
+
+    // Ensure corresponding rows exist in emergency_profiles and preparedness
+    await supabase.from('emergency_profiles').upsert({ user_id: userId }, { onConflict: 'user_id' });
+    await supabase.from('preparedness').upsert({ user_id: userId }, { onConflict: 'user_id' });
+
+    return data as UserProfile;
+  },
+
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
     if (isSupabaseConfigured() && userId && userId !== 'local-user-id') {
       const { error } = await supabase

@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../supabase';
+import { profileService } from './profileService';
 
 export type UserRole = 'student' | 'teacher' | 'faculty';
 
@@ -31,7 +32,9 @@ const LOCAL_STORAGE_KEYS = {
 };
 
 export const authService = {
-  async signUp(email: string, password: string, fullName: string, role: UserRole) {
+  async signUp(email: string, password: string, fullName: string, _roleRequested: UserRole = 'student') {
+    const role: UserRole = 'student'; // Always force student role per requirement 4
+
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -46,16 +49,18 @@ export const authService = {
 
       if (error) throw error;
 
-      if (data.user) {
-        // Upsert into public.profiles
-        const { error: profileErr } = await supabase.from('profiles').upsert({
-          id: data.user.id,
-          full_name: fullName,
-          email,
-          role,
-          updated_at: new Date().toISOString(),
-        });
-        if (profileErr) console.warn('Profile upsert warning:', profileErr.message);
+      if (!data.user) {
+        throw new Error('Supabase Auth failed to return a user object.');
+      }
+
+      // If session exists (immediate login without email confirmation requirement), create/verify profile
+      if (data.session) {
+        try {
+          await profileService.ensureProfile(data.user.id, email, fullName, role);
+        } catch (profileErr: any) {
+          console.error('Profile creation error after signup:', profileErr);
+          throw new Error(`Account created, but profile creation failed: ${profileErr.message}`);
+        }
       }
 
       return { user: data.user, session: data.session };
@@ -102,14 +107,22 @@ export const authService = {
 
   async getProfile(userId: string): Promise<UserProfile | null> {
     if (isSupabaseConfigured() && userId && userId !== 'local-user-id') {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const p = await profileService.getProfile(userId);
+      if (p) return p;
 
-      if (!error && data) {
-        return data as UserProfile;
+      // If missing, check if this is the authenticated Supabase user and ensure profile row exists
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id === userId) {
+        try {
+          return await profileService.ensureProfile(
+            user.id,
+            user.email || '',
+            user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+            'student'
+          );
+        } catch (e) {
+          console.error('Fallback profile creation error:', e);
+        }
       }
     }
 

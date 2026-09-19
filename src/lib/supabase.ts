@@ -7,8 +7,10 @@ export const isSupabaseConfigured = (): boolean => {
   return (
     Boolean(supabaseUrl) &&
     Boolean(supabaseAnonKey) &&
-    supabaseUrl !== 'https://your-project-ref.supabase.co' &&
-    !supabaseUrl.includes('your-project-ref')
+    supabaseUrl.startsWith('http') &&
+    !supabaseUrl.includes('your-project-ref') &&
+    !supabaseUrl.includes('<PROJECT_URL>') &&
+    !supabaseAnonKey.includes('<PUBLISHABLE_KEY>')
   );
 };
 

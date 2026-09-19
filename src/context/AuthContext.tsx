@@ -90,10 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [isSupabaseActive]);
 
-  const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, fullName: string, _roleRequested?: UserRole) => {
     setLoading(true);
     try {
-      const res = await authService.signUp(email, password, fullName, role);
+      const res = await authService.signUp(email, password, fullName, 'student');
       if (res.user) {
         setUser(res.user);
         const p = await authService.getProfile(res.user.id);
