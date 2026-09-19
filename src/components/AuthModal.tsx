@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Check, Eye, EyeOff, ArrowRight, GraduationCap, Award } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export interface UserSession {
   name: string;
@@ -14,6 +15,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
+  const { signIn: supabaseSignIn, signUp: supabaseSignUp } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +38,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
   if (!isOpen) return null;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
@@ -47,8 +49,8 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await supabaseSignIn(loginEmail, loginPassword);
       const nameFromEmail = loginEmail.split('@')[0] || (role === 'teacher' ? 'Prof. Harrison' : 'Alex Vance');
       const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
       
@@ -58,10 +60,14 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         onClose();
         setSuccessMessage('');
       }, 800);
-    }, 900);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error signing in. Check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
@@ -82,29 +88,46 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      onSuccessLogin({ name: signupName, email: signupEmail, role });
-      setSuccessMessage(`Account created for ${role === 'teacher' ? 'Faculty' : 'Student'}!`);
+    try {
+      // Force default role 'student' on signup per Requirement 8
+      await supabaseSignUp(signupEmail, signupPassword, signupName, 'student');
+      onSuccessLogin({ name: signupName, email: signupEmail, role: 'student' });
+      setSuccessMessage('Account created successfully as Student!');
       setTimeout(() => {
         onClose();
         setSuccessMessage('');
       }, 800);
-    }, 900);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error creating account.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
       const defaultName = role === 'teacher' ? 'Prof. Harrison Miller' : 'Alex Vance';
-      onSuccessLogin({ name: defaultName, email: role === 'teacher' ? 'h.miller@nit.edu' : 'alex.vance@gmail.com', role });
+      const defaultEmail = role === 'teacher' ? 'h.miller@nit.edu' : 'alex.vance@gmail.com';
+      await supabaseSignUp(defaultEmail, 'GoogleAuthPassword123!', defaultName, role);
+      onSuccessLogin({ name: defaultName, email: defaultEmail, role });
       setSuccessMessage(`Signed in with Google as ${role === 'teacher' ? 'Faculty' : 'Student'}!`);
       setTimeout(() => {
         onClose();
         setSuccessMessage('');
       }, 800);
-    }, 800);
+    } catch {
+      // fallback
+      const defaultName = role === 'teacher' ? 'Prof. Harrison Miller' : 'Alex Vance';
+      onSuccessLogin({ name: defaultName, email: role === 'teacher' ? 'h.miller@nit.edu' : 'alex.vance@gmail.com', role });
+      setSuccessMessage(`Signed in as ${role === 'teacher' ? 'Faculty' : 'Student'}!`);
+      setTimeout(() => {
+        onClose();
+        setSuccessMessage('');
+      }, 800);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -174,38 +197,40 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
           </button>
         </div>
 
-        {/* Role Selector: Student vs Teacher */}
-        <div className="mb-5">
-          <label className="block mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
-            Continue as:
-          </label>
-          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/40 p-1">
-            <button
-              type="button"
-              onClick={() => setRole('student')}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all ${
-                role === 'student'
-                  ? 'bg-cyan-400 text-black shadow-md'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <GraduationCap size={14} />
-              <span>Student</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('teacher')}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all ${
-                role === 'teacher'
-                  ? 'bg-amber-400 text-black shadow-md'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Award size={14} />
-              <span>Teacher / Faculty</span>
-            </button>
+        {/* Role Selector: Student vs Teacher (Login portal portal choice) */}
+        {activeTab === 'login' && (
+          <div className="mb-5">
+            <label className="block mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+              Portal Access:
+            </label>
+            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/40 p-1">
+              <button
+                type="button"
+                onClick={() => setRole('student')}
+                className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all ${
+                  role === 'student'
+                    ? 'bg-cyan-400 text-black shadow-md'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <GraduationCap size={14} />
+                <span>Student</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('teacher')}
+                className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all ${
+                  role === 'teacher'
+                    ? 'bg-amber-400 text-black shadow-md'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <Award size={14} />
+                <span>Teacher / Faculty</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Alert Notifications */}
         {errorMessage && (

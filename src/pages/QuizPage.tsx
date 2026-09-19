@@ -5,8 +5,11 @@ import { QuizProgress } from '../components/QuizProgress';
 import { QuizQuestion } from '../components/QuizQuestion';
 import { QuizResult } from '../components/QuizResult';
 import { getCategoryById, quizCategories, quizQuestions } from '../data/quizzes';
+import { useAuth } from '../context/AuthContext';
+import { quizService } from '../lib/services/quizService';
 
 export function QuizPage() {
+  const { user } = useAuth();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Array<number | null>>([]);
@@ -67,6 +70,19 @@ export function QuizPage() {
     }
 
     setIsComplete(true);
+
+    // Persist attempt to Supabase & LocalStorage
+    if (selectedCategoryId) {
+      try {
+        const existing = JSON.parse(localStorage.getItem('readysphere_quiz_scores_v1') || '{}');
+        existing[selectedCategoryId] = Math.max(existing[selectedCategoryId] || 0, score);
+        localStorage.setItem('readysphere_quiz_scores_v1', JSON.stringify(existing));
+      } catch {}
+
+      if (user?.id) {
+        quizService.recordAttempt(user.id, selectedCategoryId, score, activeQuestions.length);
+      }
+    }
   };
 
   const handlePreviousQuestion = () => {

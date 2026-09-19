@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { teacherService } from '../lib/services/teacherService';
 import {
   LayoutDashboard,
   Users,
@@ -99,10 +101,11 @@ const DEFAULT_DRILLS: SafetyDrill[] = [
 
 export function TeacherDashboard() {
   const navigate = useNavigate();
+  const { user: authUser, profile: authProfile, signOut } = useAuth();
 
   const [user, setUser] = useState<UserSession | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.USER);
+      const saved = localStorage.getItem('disasteriq_user') || localStorage.getItem(STORAGE_KEYS.USER);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -135,6 +138,40 @@ export function TeacherDashboard() {
     }
   });
 
+  // Fetch Supabase alerts & drills if active
+  useEffect(() => {
+    async function loadSupabaseData() {
+      const dbAlerts = await teacherService.getEmergencyAlerts();
+      if (dbAlerts.length > 0) {
+        setAlerts(
+          dbAlerts.map((a) => ({
+            id: a.id || `a_${Math.random()}`,
+            title: a.title,
+            severity: a.severity,
+            location: a.location || 'Entire Campus',
+            time: a.created_at ? new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+            message: a.message,
+          }))
+        );
+      }
+
+      const dbDrills = await teacherService.getDrills();
+      if (dbDrills.length > 0) {
+        setDrills(
+          dbDrills.map((d) => ({
+            id: d.id || `d_${Math.random()}`,
+            type: d.title,
+            date: d.scheduled_at ? new Date(d.scheduled_at).toLocaleDateString() : 'Upcoming',
+            time: d.scheduled_at ? new Date(d.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM',
+            location: d.location || 'Campus Quad',
+            coordinator: 'Faculty Committee',
+          }))
+        );
+      }
+    }
+    loadSupabaseData();
+  }, []);
+
   // Alert Modal / Form
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [newAlertTitle, setNewAlertTitle] = useState('');
@@ -154,20 +191,22 @@ export function TeacherDashboard() {
 
   // Role Protection: If student, redirect to /student
   useEffect(() => {
-    if (!user) return;
-    if (user.role === 'student') {
+    const currentRole = authProfile?.role || user?.role;
+    if (currentRole === 'student') {
       navigate('/student', { replace: true });
     }
-  }, [user, navigate]);
+  }, [authUser, authProfile, user, navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem('disasteriq_user');
     setUser(null);
     navigate('/');
   };
 
   // Broadcast Alert
-  const handleBroadcastAlert = (e: React.FormEvent) => {
+  const handleBroadcastAlert = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAlertTitle.trim() || !newAlertMessage.trim()) return;
 
@@ -184,6 +223,18 @@ export function TeacherDashboard() {
     setAlerts(updated);
     localStorage.setItem(STORAGE_KEYS.ALERTS, JSON.stringify(updated));
 
+    if (authUser?.id) {
+      await teacherService.createAlert(
+        {
+          title: newAlertTitle,
+          message: newAlertMessage,
+          severity: newAlertSeverity,
+          location: newAlertLocation || 'Entire Campus',
+        },
+        authUser.id
+      );
+    }
+
     setIsAlertModalOpen(false);
     setNewAlertTitle('');
     setNewAlertLocation('');
@@ -192,14 +243,15 @@ export function TeacherDashboard() {
     setTimeout(() => setFeedback(null), 3500);
   };
 
-  const handleDeleteAlert = (id: string) => {
+  const handleDeleteAlert = async (id: string) => {
     const updated = alerts.filter((a) => a.id !== id);
     setAlerts(updated);
     localStorage.setItem(STORAGE_KEYS.ALERTS, JSON.stringify(updated));
+    await teacherService.deleteAlert(id);
   };
 
   // Schedule Drill
-  const handleScheduleDrill = (e: React.FormEvent) => {
+  const handleScheduleDrill = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDrillDate || !newDrillTime) return;
 
@@ -209,12 +261,23 @@ export function TeacherDashboard() {
       date: newDrillDate,
       time: newDrillTime,
       location: newDrillLocation || 'Campus Quad',
-      coordinator: user?.name || 'Faculty Committee',
+      coordinator: authProfile?.full_name || user?.name || 'Faculty Committee',
     };
 
     const updated = [...drills, drillItem];
     setDrills(updated);
     localStorage.setItem(STORAGE_KEYS.DRILLS, JSON.stringify(updated));
+
+    if (authUser?.id) {
+      await teacherService.createDrill(
+        {
+          title: newDrillType,
+          scheduled_at: `${newDrillDate} ${newDrillTime}`,
+          location: newDrillLocation || 'Campus Quad',
+        },
+        authUser.id
+      );
+    }
 
     setIsDrillModalOpen(false);
     setNewDrillDate('');

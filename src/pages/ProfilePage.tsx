@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { profileService } from '../lib/services/profileService';
+import { preparednessService } from '../lib/services/preparednessService';
 import {
   User,
   Mail,
@@ -80,11 +83,12 @@ const STORAGE_KEYS = {
 export function ProfilePage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user: authUser, profile: authProfile, signOut, refreshProfile } = useAuth();
 
   // User session state
   const [user, setUser] = useState<UserSession | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.USER);
+      const saved = localStorage.getItem('disasteriq_user') || localStorage.getItem('readysphere_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -101,10 +105,29 @@ export function ProfilePage() {
     }
     return {
       ...DEFAULT_PROFILE,
-      fullName: user?.name || DEFAULT_PROFILE.fullName,
-      email: user?.email || DEFAULT_PROFILE.email,
+      fullName: authProfile?.full_name || user?.name || DEFAULT_PROFILE.fullName,
+      email: authProfile?.email || user?.email || DEFAULT_PROFILE.email,
     };
   });
+
+  // Sync profile when Supabase profile loads
+  useEffect(() => {
+    if (authProfile) {
+      setProfile((prev) => ({
+        ...prev,
+        fullName: authProfile.full_name || prev.fullName,
+        email: authProfile.email || prev.email,
+        phone: authProfile.phone || prev.phone,
+        college: authProfile.college || prev.college,
+        course: authProfile.course || prev.course,
+        year: authProfile.year || prev.year,
+        city: authProfile.city || prev.city,
+      }));
+      if (authProfile.avatar_url) {
+        setPhoto(authProfile.avatar_url);
+      }
+    }
+  }, [authProfile]);
 
   // Edit Mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -112,7 +135,7 @@ export function ProfilePage() {
 
   // Profile Photo state
   const [photo, setPhoto] = useState<string | null>(() => {
-    return localStorage.getItem(STORAGE_KEYS.PHOTO) || null;
+    return localStorage.getItem('disasteriq_profile_photo_v1') || localStorage.getItem(STORAGE_KEYS.PHOTO) || null;
   });
 
   // Notifications state
@@ -135,7 +158,7 @@ export function ProfilePage() {
   // UI alert feedback state
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // Preparedness progress metrics from localStorage
+  // Preparedness progress metrics from localStorage / Supabase
   const [prepStats, setPrepStats] = useState({
     kitCount: 0,
     gobagCount: 0,
@@ -169,12 +192,12 @@ export function ProfilePage() {
         planData && (planData.primaryContact?.name || planData.outOfAreaContact?.name || planData.primaryMeeting),
       );
 
-      // Composite calculation (kit: 35%, gobag: 25%, plan: 25%, review: 15%)
-      const kitPct = (kitCount / 23) * 35;
-      const gobagPct = (gobagCount / 10) * 25;
-      const planPct = hasPlan ? 25 : 0;
-      const reviewPct = (reviewCount / 6) * 15;
-      const overallScore = Math.min(100, Math.round(kitPct + gobagPct + planPct + reviewPct));
+      const overallScore = preparednessService.calculateScore(
+        kitChecked,
+        gobagChecked,
+        planData || {},
+        reviewChecked
+      );
 
       setPrepStats({
         kitCount,
@@ -184,12 +207,22 @@ export function ProfilePage() {
         quizzesCompleted,
         overallScore,
       });
+
+      // Sync with Supabase if active
+      if (authUser?.id) {
+        preparednessService.savePreparedness(authUser.id, {
+          kit_items: kitChecked,
+          go_bag_items: gobagChecked,
+          emergency_plan: planData || {},
+          review_status: reviewChecked,
+        });
+      }
     } catch {
       // Ignore parse errors
     }
-  }, []);
+  }, [authUser]);
 
-  // Update profile state if user logs in or user prop changes
+  // Update profile state if user logs in
   useEffect(() => {
     if (user && profile.fullName === DEFAULT_PROFILE.fullName && user.name !== DEFAULT_PROFILE.fullName) {
       setProfile((prev) => ({ ...prev, fullName: user.name, email: user.email }));
@@ -197,7 +230,7 @@ export function ProfilePage() {
   }, [user]);
 
   // Handle Photo Upload
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -206,6 +239,18 @@ export function ProfilePage() {
       return;
     }
 
+    if (authUser?.id) {
+      const avatarUrl = await profileService.uploadAvatar(authUser.id, file);
+      if (avatarUrl) {
+        setPhoto(avatarUrl);
+        localStorage.setItem(STORAGE_KEYS.PHOTO, avatarUrl);
+        setSaveMessage('Profile picture updated in Supabase Storage!');
+        setTimeout(() => setSaveMessage(null), 3000);
+        return;
+      }
+    }
+
+    // Fallback: Local FileReader
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
@@ -220,21 +265,43 @@ export function ProfilePage() {
   const handleRemovePhoto = () => {
     setPhoto(null);
     localStorage.removeItem(STORAGE_KEYS.PHOTO);
+    localStorage.removeItem('disasteriq_profile_photo_v1');
     setSaveMessage('Profile picture removed.');
     setTimeout(() => setSaveMessage(null), 3000);
   };
 
   // Handle Save Profile Info
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfile(tempProfile);
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(tempProfile));
+
+    if (authUser?.id) {
+      await profileService.updateProfile(authUser.id, {
+        full_name: tempProfile.fullName,
+        email: tempProfile.email,
+        phone: tempProfile.phone,
+        college: tempProfile.college,
+        course: tempProfile.course,
+        year: tempProfile.year,
+        city: tempProfile.city,
+      });
+      await profileService.updateEmergencyProfile(authUser.id, {
+        emergency_contact: `${tempProfile.emergencyName} (${tempProfile.emergencyPhone})`,
+        blood_group: tempProfile.bloodGroup,
+        medical_notes: tempProfile.medicalNotes,
+        allergies: tempProfile.allergies,
+        special_assistance: tempProfile.specialNeeds,
+      });
+      refreshProfile();
+    }
     
     // Also sync user name & email in user session
     if (user) {
       const updatedUser = { ...user, name: tempProfile.fullName, email: tempProfile.email };
       setUser(updatedUser);
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
+      localStorage.setItem('disasteriq_user', JSON.stringify(updatedUser));
     }
 
     setIsEditing(false);
@@ -285,8 +352,10 @@ export function ProfilePage() {
   };
 
   // Handle Logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem('disasteriq_user');
     setUser(null);
     navigate('/');
   };

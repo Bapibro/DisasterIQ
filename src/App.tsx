@@ -14,6 +14,8 @@ import { ProfilePage } from './pages/ProfilePage';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { TeacherDashboard } from './pages/TeacherDashboard';
 
+import { AuthProvider } from './context/AuthContext';
+
 function AppShell() {
   return (
     <div className="min-h-screen bg-[#000] text-white">
@@ -43,9 +45,11 @@ function AppShell() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppShell />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <AppShell />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

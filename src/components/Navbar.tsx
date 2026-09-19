@@ -4,6 +4,7 @@ import { Menu, X, User as UserIcon, LogOut, Settings, ChevronDown, LayoutDashboa
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AuthModal } from './AuthModal';
 import type { UserSession } from './AuthModal';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { label: 'HOME', to: '/' },
@@ -56,11 +57,12 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const { signOut: supabaseSignOut } = useAuth();
+
+  const handleLogout = async () => {
     setUser(null);
     setIsDropdownOpen(false);
-    localStorage.removeItem('disasteriq_user');
-    localStorage.removeItem('readysphere_user');
+    await supabaseSignOut();
     navigate('/');
   };
 
