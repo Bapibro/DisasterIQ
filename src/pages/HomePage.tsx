@@ -1,6 +1,7 @@
-import { ArrowRight, Backpack, Eye, ShieldAlert } from 'lucide-react';
+import { ArrowRight, Backpack, Eye, ShieldAlert, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ScrollExpand } from '../components/ScrollExpand';
+import { ScrollStack, ScrollStackItem } from '../components/ScrollStack';
 
 const pillars = [
   {
@@ -86,6 +87,106 @@ export function HomePage() {
         ctaText="Explore DisasterIQ"
         ctaLink="/learn"
       />
+
+      {/* Cinematic "Prepare With Confidence" ScrollStack Section */}
+      <section className="relative z-10 py-20">
+        <div className="mx-auto max-w-[1200px] px-5 mb-8 text-center md:px-10">
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-cyan-400">
+            How DisasterIQ Works
+          </p>
+          <h2 className="mt-3 font-[Inter] text-4xl font-normal tracking-[-0.04em] text-white md:text-5xl">
+            Prepare With Confidence
+          </h2>
+          <p className="mx-auto mt-4 max-w-[580px] text-base leading-relaxed text-white/60">
+            DisasterIQ turns awareness into practical preparedness.
+          </p>
+        </div>
+
+        <ScrollStack
+          itemDistance={100}
+          itemScale={0.035}
+          itemStackDistance={35}
+          stackPosition="18%"
+          scaleEndPosition="10%"
+          baseScale={0.86}
+          scaleDuration={0.5}
+          rotationAmount={0}
+          blurAmount={0}
+          useWindowScroll={true}
+        >
+          <ScrollStackItem>
+            <div className="scroll-stack-card">
+              <div className="scroll-stack-card-glow" />
+              <div className="scroll-stack-card-content">
+                <div className="scroll-stack-card-header">
+                  <span className="scroll-stack-card-step">Step 01 • Risk Awareness</span>
+                  <div className="scroll-stack-card-icon">
+                    <Eye size={20} />
+                  </div>
+                </div>
+                <h3 className="scroll-stack-card-title">Understand the Risk</h3>
+                <p className="scroll-stack-card-desc">
+                  Learn how earthquakes, floods, fires, cyclones, landslides, and lightning can affect your community.
+                </p>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          <ScrollStackItem>
+            <div className="scroll-stack-card">
+              <div className="scroll-stack-card-glow" />
+              <div className="scroll-stack-card-content">
+                <div className="scroll-stack-card-header">
+                  <span className="scroll-stack-card-step">Step 02 • Readiness</span>
+                  <div className="scroll-stack-card-icon">
+                    <Backpack size={20} />
+                  </div>
+                </div>
+                <h3 className="scroll-stack-card-title">Prepare Beforehand</h3>
+                <p className="scroll-stack-card-desc">
+                  Build your emergency kit, prepare a 72-hour Go-Bag, and create a personal emergency plan.
+                </p>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          <ScrollStackItem>
+            <div className="scroll-stack-card">
+              <div className="scroll-stack-card-glow" />
+              <div className="scroll-stack-card-content">
+                <div className="scroll-stack-card-header">
+                  <span className="scroll-stack-card-step">Step 03 • Immediate Action</span>
+                  <div className="scroll-stack-card-icon">
+                    <ShieldAlert size={20} />
+                  </div>
+                </div>
+                <h3 className="scroll-stack-card-title">Respond When It Matters</h3>
+                <p className="scroll-stack-card-desc">
+                  Learn practical actions to take before, during, and after an emergency.
+                </p>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          <ScrollStackItem>
+            <div className="scroll-stack-card">
+              <div className="scroll-stack-card-glow" />
+              <div className="scroll-stack-card-content">
+                <div className="scroll-stack-card-header">
+                  <span className="scroll-stack-card-step">Step 04 • Mastery</span>
+                  <div className="scroll-stack-card-icon">
+                    <Award size={20} />
+                  </div>
+                </div>
+                <h3 className="scroll-stack-card-title">Practice & Improve</h3>
+                <p className="scroll-stack-card-desc">
+                  Test your knowledge with scenario-based quizzes and track your preparedness progress.
+                </p>
+              </div>
+            </div>
+          </ScrollStackItem>
+        </ScrollStack>
+      </section>
 
       <section className="mx-auto max-w-[1200px] px-5 py-24 md:px-10">
         <div className="mb-12 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
