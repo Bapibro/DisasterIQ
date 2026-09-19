@@ -10,7 +10,6 @@ interface AuthContextType {
   isSupabaseActive: boolean;
   signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<{ user: any; session: any; needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<{ user: any; session: any }>;
-  signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -123,15 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async () => {
-    setLoading(true);
-    try {
-      return await authService.signInWithGoogle();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signOut = async () => {
     setLoading(true);
     try {
@@ -161,7 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isSupabaseActive,
         signUp,
         signIn,
-        signInWithGoogle,
         signOut,
         refreshProfile,
       }}
