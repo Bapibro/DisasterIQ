@@ -33,68 +33,84 @@ const LOCAL_STORAGE_KEYS = {
 
 export const authService = {
   async signUp(email: string, password: string, fullName: string, _roleRequested: UserRole = 'student') {
-    const role: UserRole = 'student'; // Always force student role per requirement 4
+    const role: UserRole = 'student'; // Always force student role per requirements
 
-    if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      if (!data.user) {
-        throw new Error('Supabase Auth failed to return a user object.');
-      }
-
-      // If session exists (immediate login without email confirmation requirement), create/verify profile
-      if (data.session) {
-        try {
-          await profileService.ensureProfile(data.user.id, email, fullName, role);
-        } catch (profileErr: any) {
-          console.error('Profile creation error after signup:', profileErr);
-          throw new Error(`Account created, but profile creation failed: ${profileErr.message}`);
-        }
-      }
-
-      return { user: data.user, session: data.session };
+    if (!isSupabaseConfigured()) {
+      const configErr = new Error('Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are missing in this deployment. Please add them under Vercel Project Settings > Environment Variables.');
+      (configErr as any).status = 400;
+      (configErr as any).code = 'MISSING_ENV_VARS';
+      (configErr as any).name = 'SupabaseConfigError';
+      throw configErr;
     }
 
-    // Fallback: LocalStorage simulation
-    const mockUser: UserSession = { name: fullName, email, role };
-    localStorage.setItem(LOCAL_STORAGE_KEYS.USER, JSON.stringify(mockUser));
-    return { user: { id: 'local-user-id', email }, session: null };
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role,
+        },
+      },
+    });
+
+    if (error) {
+      const authErr = new Error(error.message);
+      (authErr as any).status = error.status || 400;
+      (authErr as any).code = error.code || 'AUTH_SIGNUP_ERROR';
+      (authErr as any).name = error.name || 'AuthApiError';
+      throw authErr;
+    }
+
+    if (!data.user) {
+      const nullErr = new Error('Supabase Auth failed to return a user object.');
+      (nullErr as any).status = 500;
+      (nullErr as any).code = 'NULL_USER_RETURNED';
+      (nullErr as any).name = 'AuthResponseError';
+      throw nullErr;
+    }
+
+    const needsEmailConfirmation = !data.session;
+
+    // If session exists (immediate login without email confirmation requirement), ensure profile
+    if (data.session) {
+      try {
+        await profileService.ensureProfile(data.user.id, email, fullName, role);
+      } catch (profileErr: any) {
+        console.warn('Profile creation warning after signup:', profileErr.message);
+      }
+    }
+
+    return {
+      user: data.user,
+      session: data.session,
+      needsEmailConfirmation,
+    };
   },
 
   async signIn(email: string, password: string) {
-    if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      return { user: data.user, session: data.session };
+    if (!isSupabaseConfigured()) {
+      const configErr = new Error('Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are missing in this deployment. Please add them under Vercel Project Settings > Environment Variables.');
+      (configErr as any).status = 400;
+      (configErr as any).code = 'MISSING_ENV_VARS';
+      (configErr as any).name = 'SupabaseConfigError';
+      throw configErr;
     }
 
-    // Fallback: LocalStorage simulation
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.USER) || localStorage.getItem(LOCAL_STORAGE_KEYS.OLD_USER);
-    let mockUser: UserSession = { name: email.split('@')[0], email, role: 'student' };
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        mockUser = { ...parsed, email };
-      } catch {
-        // ignore
-      }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      const authErr = new Error(error.message);
+      (authErr as any).status = error.status || 400;
+      (authErr as any).code = error.code || 'AUTH_LOGIN_ERROR';
+      (authErr as any).name = error.name || 'AuthApiError';
+      throw authErr;
     }
-    localStorage.setItem(LOCAL_STORAGE_KEYS.USER, JSON.stringify(mockUser));
-    return { user: { id: 'local-user-id', email }, session: null };
+
+    return { user: data.user, session: data.session };
   },
 
   async signOut() {

@@ -33,15 +33,21 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
   // UI status states
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorDetails, setErrorDetails] = useState<{ message: string; status?: number; code?: string; name?: string } | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
 
   if (!isOpen) return null;
 
+  const clearAlerts = () => {
+    setErrorMessage('');
+    setErrorDetails(null);
+    setSuccessMessage('');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+    clearAlerts();
 
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setErrorMessage('Please enter both email and password.');
@@ -61,7 +67,12 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         setSuccessMessage('');
       }, 800);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error signing in. Check your credentials.');
+      setErrorDetails({
+        message: err.message || 'Error signing in. Check your credentials.',
+        status: err.status,
+        code: err.code,
+        name: err.name,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +80,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+    clearAlerts();
 
     if (!signupName.trim() || !signupEmail.trim() || !signupPassword.trim()) {
       setErrorMessage('Please fill out all required fields.');
@@ -89,16 +99,26 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
     setIsLoading(true);
     try {
-      // Force default role 'student' on signup per Requirement 8
-      await supabaseSignUp(signupEmail, signupPassword, signupName, 'student');
-      onSuccessLogin({ name: signupName, email: signupEmail, role: 'student' });
-      setSuccessMessage('Account created successfully as Student!');
-      setTimeout(() => {
-        onClose();
-        setSuccessMessage('');
-      }, 800);
+      // Force default role 'student' on signup per requirements
+      const res = await supabaseSignUp(signupEmail, signupPassword, signupName, 'student');
+      
+      if (res?.needsEmailConfirmation) {
+        setSuccessMessage('Account created in Supabase! Please check your email inbox to confirm your email address before signing in.');
+      } else {
+        onSuccessLogin({ name: signupName, email: signupEmail, role: 'student' });
+        setSuccessMessage('Account created successfully in Supabase!');
+        setTimeout(() => {
+          onClose();
+          setSuccessMessage('');
+        }, 1200);
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error creating account.');
+      setErrorDetails({
+        message: err.message || 'Error creating account.',
+        status: err.status,
+        code: err.code,
+        name: err.name,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -236,6 +256,19 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         {errorMessage && (
           <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
             {errorMessage}
+          </div>
+        )}
+
+        {errorDetails && (
+          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300 space-y-1.5">
+            <div className="font-semibold text-red-200">{errorDetails.message}</div>
+            {(errorDetails.code || errorDetails.status || errorDetails.name) && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-red-300/80 pt-1.5 border-t border-red-500/20 mt-1">
+                {errorDetails.code && <div><span className="text-white/40 font-mono">code:</span> {errorDetails.code}</div>}
+                {errorDetails.status && <div><span className="text-white/40 font-mono">status:</span> {errorDetails.status}</div>}
+                {errorDetails.name && <div><span className="text-white/40 font-mono">name:</span> {errorDetails.name}</div>}
+              </div>
+            )}
           </div>
         )}
 

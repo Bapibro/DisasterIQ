@@ -8,8 +8,8 @@ interface AuthContextType {
   session: any | null;
   loading: boolean;
   isSupabaseActive: boolean;
-  signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<{ user: any; session: any; needsEmailConfirmation: boolean }>;
+  signIn: (email: string, password: string) => Promise<{ user: any; session: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -96,9 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await authService.signUp(email, password, fullName, 'student');
       if (res.user) {
         setUser(res.user);
-        const p = await authService.getProfile(res.user.id);
-        setProfile(p);
+        if (res.session) {
+          const p = await authService.getProfile(res.user.id);
+          setProfile(p);
+        }
       }
+      return res;
     } finally {
       setLoading(false);
     }
@@ -113,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const p = await authService.getProfile(res.user.id);
         setProfile(p);
       }
+      return res;
     } finally {
       setLoading(false);
     }
