@@ -90,7 +90,7 @@ export function QuizPage() {
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/60">DisasterReady AI</p>
           <h1 className="mt-3 text-4xl font-medium tracking-[-0.05em] text-white md:text-5xl">
-            ReadySphere quiz lab
+            DisasterIQ Quiz Lab
           </h1>
         </div>
 

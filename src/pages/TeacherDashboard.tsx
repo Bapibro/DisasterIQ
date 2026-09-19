@@ -231,7 +231,7 @@ export function TeacherDashboard() {
           <Shield className="mx-auto mb-4 h-16 w-16 text-amber-400" />
           <h1 className="font-[Inter] text-3xl font-normal tracking-tight text-white">Faculty Portal Access</h1>
           <p className="mt-3 text-sm text-white/70">
-            Please log in as a Faculty / Teacher member to access safety operations.
+            Please log in as a Faculty / Teacher member to access DisasterIQ safety operations.
           </p>
           <button
             onClick={() => navigate('/')}

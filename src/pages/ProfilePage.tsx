@@ -305,7 +305,7 @@ export function ProfilePage() {
 
   // Handle Delete Account
   const handleDeleteAccount = () => {
-    if (window.confirm('Are you sure you want to delete your ReadySphere account? This will clear your user data and log you out.')) {
+    if (window.confirm('Are you sure you want to delete your DisasterIQ account? This will clear your user data and log you out.')) {
       localStorage.removeItem(STORAGE_KEYS.USER);
       localStorage.removeItem(STORAGE_KEYS.PROFILE);
       localStorage.removeItem(STORAGE_KEYS.PHOTO);
@@ -323,7 +323,7 @@ export function ProfilePage() {
           <Shield className="mx-auto mb-4 h-16 w-16 text-cyan-400" />
           <h1 className="font-[Inter] text-3xl font-normal tracking-tight text-white">Profile Access Required</h1>
           <p className="mt-3 text-sm text-white/70">
-            Please log in or sign up to view and manage your ReadySphere™ student safety profile.
+            Please log in or sign up to view and manage your DisasterIQ student safety profile.
           </p>
           <button
             onClick={() => navigate('/')}
@@ -955,7 +955,7 @@ export function ProfilePage() {
               className="flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-6 py-2.5 text-xs font-semibold text-red-300 transition-all hover:bg-red-500/20"
             >
               <LogOut size={14} />
-              <span>Log Out of ReadySphere</span>
+              <span>Log Out of DisasterIQ</span>
             </button>
           </div>
         </div>

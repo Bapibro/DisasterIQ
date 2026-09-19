@@ -123,7 +123,7 @@ export function StudentDashboard() {
           <Shield className="mx-auto mb-4 h-16 w-16 text-cyan-400" />
           <h1 className="font-[Inter] text-3xl font-normal tracking-tight text-white">Student Portal Access</h1>
           <p className="mt-3 text-sm text-white/70">
-            Please log in as a student to access your personal safety dashboard.
+            Please log in as a student to access your DisasterIQ safety dashboard.
           </p>
           <button
             onClick={() => navigate('/')}

@@ -131,7 +131,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
         {/* Modal Title / Header */}
         <div className="mb-6">
-          <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">ReadySphere™ Access</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">DisasterIQ Access</span>
           <h2 className="mt-1 font-[Inter] text-2xl font-normal tracking-tight text-white md:text-3xl">
             {activeTab === 'login' ? 'Welcome Back' : 'Create an Account'}
           </h2>

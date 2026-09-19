@@ -25,7 +25,7 @@ export function Navbar() {
 
   const [user, setUser] = useState<UserSession | null>(() => {
     try {
-      const saved = localStorage.getItem('readysphere_user');
+      const saved = localStorage.getItem('disasteriq_user') || localStorage.getItem('readysphere_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -33,13 +33,13 @@ export function Navbar() {
   });
 
   const [photo, setPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('readysphere_profile_photo_v1') || null;
+    return localStorage.getItem('disasteriq_profile_photo_v1') || localStorage.getItem('readysphere_profile_photo_v1') || null;
   });
 
   // Keep photo in sync with localStorage updates
   useEffect(() => {
     const handleStorageChange = () => {
-      setPhoto(localStorage.getItem('readysphere_profile_photo_v1') || null);
+      setPhoto(localStorage.getItem('disasteriq_profile_photo_v1') || localStorage.getItem('readysphere_profile_photo_v1') || null);
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
@@ -59,12 +59,14 @@ export function Navbar() {
   const handleLogout = () => {
     setUser(null);
     setIsDropdownOpen(false);
+    localStorage.removeItem('disasteriq_user');
     localStorage.removeItem('readysphere_user');
     navigate('/');
   };
 
   const handleSuccessLogin = (userData: UserSession) => {
     setUser(userData);
+    localStorage.setItem('disasteriq_user', JSON.stringify(userData));
     localStorage.setItem('readysphere_user', JSON.stringify(userData));
     // Auto-navigate to appropriate portal dashboard
     if (userData.role === 'teacher') {
@@ -103,7 +105,7 @@ export function Navbar() {
       <header className="fixed inset-x-0 top-0 z-50 px-5 py-7 md:px-10">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
           <NavLink to="/" className="text-[17px] font-semibold tracking-tight text-white">
-            ReadySphere™
+            DisasterIQ
           </NavLink>
 
           <nav className="hidden items-center justify-center md:flex">
