@@ -1,5 +1,6 @@
 import { ArrowRight, Backpack, Eye, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ScrollExpand } from '../components/ScrollExpand';
 
 const pillars = [
   {
@@ -62,6 +63,27 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Cinematic ScrollExpand Transition Section */}
+      <ScrollExpand
+        useWindowScroll={true}
+        startWidth={42}
+        startHeight={58}
+        startRadius={24}
+        endRadius={0}
+        mediaZoom={1.3}
+        scrollDistance={1.2}
+        holdDistance={0.3}
+        smoothing={0.08}
+        overlayScrim={0.5}
+        enabled={true}
+        title="Prepare Before It Happens"
+        scrollHint="Scroll to explore"
+        expandedTitle="Learn. Prepare. Respond."
+        expandedDescription="DisasterIQ helps students and communities understand risks, prepare effectively, and respond with confidence."
+        ctaText="Explore DisasterIQ"
+        ctaLink="/learn"
+      />
 
       <section className="mx-auto max-w-[1200px] px-5 py-24 md:px-10">
         <div className="mb-12 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">

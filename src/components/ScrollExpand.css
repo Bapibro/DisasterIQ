@@ -1,0 +1,197 @@
+/* ScrollExpand Component Styling - DisasterIQ Dark Cinematic Theme */
+
+.scroll-expand-container {
+  position: relative;
+  width: 100%;
+  background-color: #04070a;
+}
+
+.scroll-expand-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.scroll-expand-card {
+  position: relative;
+  overflow: hidden;
+  will-change: width, height, border-radius;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15);
+  background-color: #0b1117;
+}
+
+.scroll-expand-media-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scroll-expand-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+
+.scroll-expand-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: #000000;
+  pointer-events: none;
+  z-index: 10;
+  will-change: opacity;
+}
+
+/* Initial Overlay (Shown when card is unexpanded) */
+.scroll-expand-initial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.scroll-expand-initial-title {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: clamp(1.75rem, 3.5vw, 3.25rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+}
+
+.scroll-expand-scroll-hint {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.scroll-expand-hint-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #22d3ee;
+  box-shadow: 0 0 8px #22d3ee;
+  animation: scroll-hint-pulse 2s infinite ease-in-out;
+}
+
+@keyframes scroll-hint-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Expanded Content Overlay (Fades in when media expands) */
+.scroll-expand-expanded-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #ffffff;
+  will-change: opacity, transform;
+}
+
+.scroll-expand-content-box {
+  max-width: 850px;
+  width: 100%;
+}
+
+.scroll-expand-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: #22d3ee;
+  margin-bottom: 1rem;
+}
+
+.scroll-expand-expanded-title {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: clamp(2.25rem, 5.5vw, 4.75rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+}
+
+.scroll-expand-expanded-desc {
+  max-width: 640px;
+  margin: 0 auto 2.25rem auto;
+  font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
+}
+
+.scroll-expand-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.95rem 2.25rem;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.25);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.scroll-expand-cta:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 45px rgba(255, 255, 255, 0.4);
+}
+
+/* Mobile Responsiveness Adjustments */
+@media (max-width: 768px) {
+  .scroll-expand-expanded-overlay {
+    padding: 1.5rem 1rem;
+  }
+
+  .scroll-expand-expanded-title {
+    font-size: clamp(1.85rem, 7vw, 2.75rem);
+  }
+
+  .scroll-expand-expanded-desc {
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .scroll-expand-cta {
+    padding: 0.8rem 1.75rem;
+    font-size: 0.875rem;
+  }
+}
