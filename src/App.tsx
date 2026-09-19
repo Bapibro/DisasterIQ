@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { PageTransition } from './components/PageTransition';
+import { IntroLoader } from './components/IntroLoader';
 import { HomePage } from './pages/HomePage';
 import { LearnPage } from './pages/LearnPage';
 import { DisasterDetailPage } from './pages/DisasterDetailPage';
@@ -19,6 +20,7 @@ import { AuthProvider } from './context/AuthContext';
 function AppShell() {
   return (
     <div className="min-h-screen bg-[#000] text-white">
+      <IntroLoader />
       <Navbar />
       <main className="pt-24">
         <PageTransition>

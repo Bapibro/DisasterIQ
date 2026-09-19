@@ -1,0 +1,64 @@
+/* DisasterIQ Cinematic Intro Overlay Styling */
+
+.intro-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-color: #030608;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: auto;
+  will-change: transform;
+}
+
+.intro-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  will-change: transform, opacity;
+}
+
+.intro-loader-title-wrapper {
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.intro-loader-title {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: clamp(3.2rem, 7.5vw, 6.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  will-change: transform, opacity;
+}
+
+.intro-loader-title span {
+  color: #22d3ee;
+}
+
+.intro-loader-tagline-wrapper {
+  overflow: hidden;
+}
+
+.intro-loader-tagline {
+  font-size: clamp(0.8rem, 1.6vw, 1.15rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.65);
+  will-change: transform, opacity;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .intro-loader-overlay {
+    transition: opacity 0.5s ease-out;
+  }
+}
