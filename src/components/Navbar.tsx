@@ -14,6 +14,7 @@ const navItems = [
   { label: 'GUIDE', to: '/guide' },
   { label: 'CAMPUS', to: '/campus' },
   { label: 'ARCHIVE', to: '/disasters' },
+  { label: 'LIVE MONITORING', to: '/live-monitoring' },
 ];
 
 export function Navbar() {
@@ -311,5 +312,4 @@ export function Navbar() {
     </>
   );
 }
-
 

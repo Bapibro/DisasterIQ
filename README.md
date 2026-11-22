@@ -30,3 +30,9 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Nagpur Live Monitoring
+
+The `/live-monitoring` page provides a Nagpur-centered interactive map, OpenStreetMap locality search, RainViewer past radar frames, and Open-Meteo model weather and hourly precipitation forecasts. Radar metadata refreshes every five minutes; forecast data refreshes hourly. Both feeds show their own update timestamps and retain the last successful response if a refresh fails.
+
+RainViewer currently provides past frames only (no nowcast), and its radar tiles have a maximum native zoom of 7. IMD warning/nowcast/rainfall layers, a Nagpur city boundary, flood susceptibility, and verified waterlogging reports are not drawn because no browser-accessible, verified local data feed is available. The dashboard is situational awareness, not an official warning system.

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -14,8 +15,9 @@ import { DisasterArchives } from './pages/DisasterArchives';
 import { ProfilePage } from './pages/ProfilePage';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { TeacherDashboard } from './pages/TeacherDashboard';
-
 import { AuthProvider } from './context/AuthContext';
+
+const LiveMonitoringPage = lazy(() => import('./pages/LiveMonitoringPage'));
 
 function AppShell() {
   return (
@@ -36,6 +38,14 @@ function AppShell() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/teacher" element={<TeacherDashboard />} />
+            <Route
+              path="/live-monitoring"
+              element={
+                <Suspense fallback={<div className="min-h-[60vh] bg-[#080d11] px-8 py-16 text-sm text-white/60">Loading live monitoring…</div>}>
+                  <LiveMonitoringPage />
+                </Suspense>
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </PageTransition>
@@ -56,4 +66,3 @@ function App() {
 }
 
 export default App;
-
