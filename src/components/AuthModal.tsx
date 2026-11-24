@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, Lock, User, Check, Eye, EyeOff, ArrowRight, GraduationCap, Award } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -37,6 +38,70 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
   const [errorDetails, setErrorDetails] = useState<{ message: string; status?: number; code?: string; name?: string } | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const root = document.getElementById('root');
+    const rootWasInert = root?.hasAttribute('inert') ?? false;
+    const previousAriaHidden = root?.getAttribute('aria-hidden');
+    const previousOverflow = document.body.style.overflow;
+    const dialog = dialogRef.current;
+
+    (dialog?.querySelector<HTMLElement>('input[autocomplete="email"]') ?? dialog)?.focus();
+    root?.setAttribute('inert', '');
+    root?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialog) return;
+
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter((element) => element.getClientRects().length > 0);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !dialog.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (root) {
+        if (rootWasInert) root.setAttribute('inert', '');
+        else root.removeAttribute('inert');
+        if (previousAriaHidden == null) root.removeAttribute('aria-hidden');
+        else root.setAttribute('aria-hidden', previousAriaHidden);
+      }
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -163,11 +228,25 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         errorDetails.code === 'SUPABASE_CONNECTION_ERROR')
   );
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md transition-all animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/15 bg-[#080d11]/90 p-6 md:p-8 text-white shadow-[0_25px_70px_rgba(0,0,0,0.8)] liquid-glass">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md transition-all animate-in fade-in duration-200"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        aria-describedby="auth-modal-description"
+        tabIndex={-1}
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/15 bg-[#080d11]/90 p-6 md:p-8 text-white shadow-[0_25px_70px_rgba(0,0,0,0.8)] liquid-glass"
+      >
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white"
           aria-label="Close authentication modal"
@@ -178,10 +257,10 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         {/* Modal Title / Header */}
         <div className="mb-6">
           <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">DisasterIQ Access</span>
-          <h2 className="mt-1 font-[Inter] text-2xl font-normal tracking-tight text-white md:text-3xl">
+          <h2 id="auth-modal-title" className="mt-1 font-[Inter] text-2xl font-normal tracking-tight text-white md:text-3xl">
             {activeTab === 'login' ? 'Welcome Back' : 'Create an Account'}
           </h2>
-          <p className="mt-1 text-xs text-white/60">
+          <p id="auth-modal-description" className="mt-1 text-xs text-white/60">
             {activeTab === 'login'
               ? 'Access your personalized emergency preparedness dashboard.'
               : 'Join the community disaster readiness and safety platform.'}
@@ -192,6 +271,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         <div className="mb-4 flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
           <button
             type="button"
+            aria-pressed={activeTab === 'login'}
             onClick={() => {
               clearAlerts();
               setActiveTab('login');
@@ -206,6 +286,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
           </button>
           <button
             type="button"
+            aria-pressed={activeTab === 'signup'}
             onClick={() => {
               clearAlerts();
               setActiveTab('signup');
@@ -222,13 +303,14 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
         {/* Role Selector: Student vs Teacher (Login portal portal choice) */}
         {activeTab === 'login' && (
-          <div className="mb-5">
-            <label className="block mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+          <div className="mb-5" role="group" aria-label="Portal access">
+            <span className="block mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
               Portal Access:
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/40 p-1">
               <button
                 type="button"
+                aria-pressed={role === 'student'}
                 onClick={() => setRole('student')}
                 className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all ${
                   role === 'student'
@@ -241,6 +323,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
               </button>
               <button
                 type="button"
+                aria-pressed={role === 'teacher'}
                 onClick={() => setRole('teacher')}
                 className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all ${
                   role === 'teacher'
@@ -257,13 +340,13 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
         {/* Alert Notifications */}
         {errorMessage && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+          <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
             {errorMessage}
           </div>
         )}
 
         {errorDetails && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300 space-y-1.5">
+          <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300 space-y-1.5">
             <div className="font-semibold text-red-200">{errorDetails.message}</div>
             {shouldShowErrorDetails && (
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-red-300/80 pt-1.5 border-t border-red-500/20 mt-1">
@@ -276,14 +359,14 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         )}
 
         {successMessage && (
-          <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-300">
+          <div role="status" className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-300">
             <Check size={16} />
             <span>{successMessage}</span>
           </div>
         )}
 
         {forgotPasswordSent && (
-          <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-xs text-cyan-300">
+          <div role="status" className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-xs text-cyan-300">
             If an account exists for <strong>{loginEmail.trim()}</strong>, a password reset link has been sent. Check your inbox.
           </div>
         )}
@@ -292,10 +375,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         {activeTab === 'login' ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-medium text-white/70">Email Address</label>
+              <label htmlFor="auth-login-email" className="block text-[11px] font-medium text-white/70">Email Address</label>
               <div className="relative mt-1">
                 <Mail size={15} className="absolute left-3.5 top-3 text-white/40" />
                 <input
+                  id="auth-login-email"
                   type="email"
                   required
                   autoComplete="email"
@@ -308,10 +392,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-white/70">Password</label>
+              <label htmlFor="auth-login-password" className="block text-[11px] font-medium text-white/70">Password</label>
               <div className="relative mt-1">
                 <Lock size={15} className="absolute left-3.5 top-3 text-white/40" />
                 <input
+                  id="auth-login-password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
@@ -324,6 +409,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-3 text-white/40 hover:text-white"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -370,10 +456,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
           /* TAB 2: SIGN UP FORM */
           <form onSubmit={handleSignup} className="space-y-3.5">
             <div>
-              <label className="block text-[11px] font-medium text-white/70">Full Name</label>
+              <label htmlFor="auth-signup-name" className="block text-[11px] font-medium text-white/70">Full Name</label>
               <div className="relative mt-1">
                 <User size={15} className="absolute left-3.5 top-3 text-white/40" />
                 <input
+                  id="auth-signup-name"
                   type="text"
                   required
                   autoComplete="name"
@@ -386,10 +473,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-white/70">Email Address</label>
+              <label htmlFor="auth-signup-email" className="block text-[11px] font-medium text-white/70">Email Address</label>
               <div className="relative mt-1">
                 <Mail size={15} className="absolute left-3.5 top-3 text-white/40" />
                 <input
+                  id="auth-signup-email"
                   type="email"
                   required
                   autoComplete="email"
@@ -403,10 +491,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-[11px] font-medium text-white/70">Password</label>
+                <label htmlFor="auth-signup-password" className="block text-[11px] font-medium text-white/70">Password</label>
                 <div className="relative mt-1">
                   <Lock size={15} className="absolute left-3.5 top-3 text-white/40" />
                   <input
+                    id="auth-signup-password"
                     type="password"
                     required
                     autoComplete="new-password"
@@ -419,10 +508,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-white/70">Confirm Password</label>
+                <label htmlFor="auth-signup-confirm-password" className="block text-[11px] font-medium text-white/70">Confirm Password</label>
                 <div className="relative mt-1">
                   <Lock size={15} className="absolute left-3.5 top-3 text-white/40" />
                   <input
+                    id="auth-signup-confirm-password"
                     type="password"
                     required
                     autoComplete="new-password"
@@ -452,6 +542,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { PageTransition } from './components/PageTransition';
@@ -10,6 +10,7 @@ import { DisasterDetailPage } from './pages/DisasterDetailPage';
 import { PreparePage } from './pages/PreparePage';
 import { QuizPage } from './pages/QuizPage';
 import { GuidePage } from './pages/GuidePage';
+import OfflineEmergencyPage from './pages/OfflineEmergencyPage';
 import { CampusPage } from './pages/CampusPage';
 import { DisasterArchives } from './pages/DisasterArchives';
 import { ProfilePage } from './pages/ProfilePage';
@@ -28,16 +29,17 @@ const operationalRoutes = [
   '/incident-reporting',
   '/emergency-alerts',
   '/response-center',
-  '/offline-emergency',
   '/ai-intelligence',
 ];
 
 const weatherHazardRoutes = ['/heatwave-monitoring', '/storm-monitoring'];
 
 function AppShell() {
+  const location = useLocation();
+
   return (
     <div className="min-h-screen bg-[#000] text-white">
-      <IntroLoader />
+      {location.pathname !== '/offline-emergency' && <IntroLoader />}
       <Navbar />
       <main className="pt-24">
         <PageTransition>
@@ -48,6 +50,7 @@ function AppShell() {
             <Route path="/prepare" element={<PreparePage />} />
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/guide" element={<GuidePage />} />
+            <Route path="/offline-emergency" element={<OfflineEmergencyPage />} />
             <Route path="/campus" element={<CampusPage />} />
             <Route path="/disasters" element={<DisasterArchives />} />
             <Route path="/profile" element={<ProfilePage />} />

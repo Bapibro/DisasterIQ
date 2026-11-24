@@ -63,8 +63,9 @@ const modules: ModuleDefinition[] = [
     title: 'Incident Reporting',
     group: 'Emergency response',
     summary: 'A citizen reporting workflow for location-aware incidents, verification, and status history.',
-    currentLimit: 'Incident submissions are not enabled. The existing Supabase schema has no incident-report table, and no report is being stored locally or submitted.',
-    phase: 'Phase 3 · Supabase schema and reporting',
+    currentLimit: 'Offline report preparation and local queuing are available on the Offline Emergency page. Online submission remains unavailable until the incident_reports migration is applied to Supabase.',
+    currentAction: { label: 'Open offline reporting', href: '/offline-emergency' },
+    phase: 'Phase 3 · Supabase migration and reporting',
   },
   {
     path: '/emergency-alerts',
@@ -82,15 +83,6 @@ const modules: ModuleDefinition[] = [
     summary: 'A role-protected operations workspace for reviewing and coordinating verified incidents.',
     currentLimit: 'There is no incident backend or server-enforced incident authorization in this project yet. Administrative controls are intentionally not exposed based on client-side roles.',
     phase: 'Phase 4 · authorization and operations',
-  },
-  {
-    path: '/offline-emergency',
-    title: 'Offline Emergency',
-    group: 'Emergency response',
-    summary: 'Safety guidance and emergency contacts that remain accessible without a live weather connection.',
-    currentLimit: 'This app does not yet include a service worker or offline content cache. Live weather and map layers require an internet connection.',
-    currentAction: { label: 'Open existing safety guide', href: '/guide' },
-    phase: 'Phase 4 · offline support',
   },
   {
     path: '/ai-intelligence',
