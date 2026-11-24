@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -20,6 +20,7 @@ import {
   Backpack,
 } from 'lucide-react';
 import { GlassCard } from '../components/GlassCard';
+import { useAuth } from '../context/AuthContext';
 
 interface UserSession {
   name: string;
@@ -38,8 +39,9 @@ const STORAGE_KEYS = {
 
 export function StudentDashboard() {
   const navigate = useNavigate();
+  const { isSupabaseActive, user: authUser, profile: authProfile, signOut } = useAuth();
 
-  const [user, setUser] = useState<UserSession | null>(() => {
+  const [localUser, setLocalUser] = useState<UserSession | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USER);
       return saved ? JSON.parse(saved) : null;
@@ -47,6 +49,17 @@ export function StudentDashboard() {
       return null;
     }
   });
+
+  const user = useMemo<UserSession | null>(() => {
+    if (!isSupabaseActive) return localUser;
+    if (!authUser) return null;
+
+    return {
+      name: authProfile?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Student',
+      email: authProfile?.email || authUser.email || '',
+      role: authProfile?.role === 'teacher' || authProfile?.role === 'faculty' ? 'teacher' : 'student',
+    };
+  }, [isSupabaseActive, authUser, authProfile, localUser]);
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'achievements' | 'advisories'>('dashboard');
 
@@ -110,9 +123,13 @@ export function StudentDashboard() {
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isSupabaseActive) {
+      await signOut();
+    }
     localStorage.removeItem(STORAGE_KEYS.USER);
-    setUser(null);
+    localStorage.removeItem('disasteriq_user');
+    setLocalUser(null);
     navigate('/');
   };
 
@@ -141,6 +158,8 @@ export function StudentDashboard() {
     { label: 'Learn Modules', icon: BookOpen, action: () => navigate('/learn') },
     { label: 'Quizzes', icon: BrainCircuit, action: () => navigate('/quiz') },
     { label: 'Prepare & Kit', icon: Shield, action: () => navigate('/prepare') },
+    { label: 'Live Monitoring', icon: Activity, action: () => navigate('/live-monitoring') },
+    { label: 'Emergency Guide', icon: Phone, action: () => navigate('/offline-emergency') },
     { label: 'Campus Safety', icon: Building, action: () => navigate('/campus') },
     { label: 'Achievements', icon: Award, action: () => setActiveTab('achievements'), active: activeTab === 'achievements' },
     { label: 'Profile', icon: User, action: () => navigate('/profile') },

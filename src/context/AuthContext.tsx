@@ -8,8 +8,10 @@ interface AuthContextType {
   session: any | null;
   loading: boolean;
   isSupabaseActive: boolean;
-  signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<{ user: any; session: any; needsEmailConfirmation: boolean }>;
-  signIn: (email: string, password: string) => Promise<{ user: any; session: any }>;
+  signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<{ user: any; session: any; needsEmailConfirmation: boolean; profile: UserProfile | null }>;
+  signIn: (email: string, password: string) => Promise<{ user: any; session: any; profile: UserProfile | null }>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -57,31 +59,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isSupabaseActive) {
-      // Fetch initial session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          loadSupabaseUserProfile(session.user.id);
-        } else {
-          loadLocalUser();
-        }
-        setLoading(false);
-      });
+      let active = true;
 
-      // Listen for auth state changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          loadSupabaseUserProfile(session.user.id);
+      const applySession = (nextSession: any) => {
+        if (!active) return;
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+        if (nextSession?.user) {
+          setProfile((current) => current?.id === nextSession.user.id ? current : null);
+          loadSupabaseUserProfile(nextSession.user.id);
         } else {
-          loadLocalUser();
+          setProfile(null);
         }
         setLoading(false);
+      };
+
+      supabase.auth.getSession()
+        .then(({ data: { session } }) => applySession(session))
+        .catch((error) => {
+          console.warn('Could not restore Supabase session:', error);
+          if (active) {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
+        });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        applySession(session);
       });
 
       return () => {
+        active = false;
         subscription.unsubscribe();
       };
     } else {
@@ -94,14 +104,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const res = await authService.signUp(email, password, fullName, 'student');
-      if (res.user) {
+      let profile: UserProfile | null = null;
+
+      if (res.session && res.user) {
         setUser(res.user);
-        if (res.session) {
-          const p = await authService.getProfile(res.user.id);
-          setProfile(p);
-        }
+        setSession(res.session);
+        profile = await authService.getProfile(res.user.id);
+        setProfile(profile);
+      } else {
+        setUser(null);
+        setProfile(null);
+        setSession(null);
       }
-      return res;
+
+      return { ...res, profile };
     } finally {
       setLoading(false);
     }
@@ -111,15 +127,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const res = await authService.signIn(email, password);
+      let profile: UserProfile | null = null;
+
       if (res.user) {
         setUser(res.user);
-        const p = await authService.getProfile(res.user.id);
-        setProfile(p);
+        setSession(res.session);
+        profile = await authService.getProfile(res.user.id);
+        setProfile(profile);
       }
-      return res;
+
+      return { ...res, profile };
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetPassword = async (email: string) => {
+    await authService.resetPassword(email);
+  };
+
+  const updatePassword = async (password: string) => {
+    await authService.updatePassword(password);
   };
 
   const signOut = async () => {
@@ -151,6 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isSupabaseActive,
         signUp,
         signIn,
+        resetPassword,
+        updatePassword,
         signOut,
         refreshProfile,
       }}

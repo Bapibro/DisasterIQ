@@ -15,7 +15,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
-  const { signIn: supabaseSignIn, signUp: supabaseSignUp } = useAuth();
+  const { signIn: supabaseSignIn, signUp: supabaseSignUp, resetPassword: supabaseResetPassword } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +32,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
   // UI status states
   const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorDetails, setErrorDetails] = useState<{ message: string; status?: number; code?: string; name?: string } | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -43,6 +44,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
     setErrorMessage('');
     setErrorDetails(null);
     setSuccessMessage('');
+    setForgotPasswordSent(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -56,12 +58,14 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
     setIsLoading(true);
     try {
-      await supabaseSignIn(loginEmail, loginPassword);
-      const nameFromEmail = loginEmail.split('@')[0] || (role === 'teacher' ? 'Prof. Harrison' : 'Alex Vance');
-      const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
-      
-      onSuccessLogin({ name: formattedName, email: loginEmail, role });
-      setSuccessMessage(`Logged in as ${role === 'teacher' ? 'Faculty Member' : 'Student'}!`);
+      const result = await supabaseSignIn(loginEmail.trim(), loginPassword);
+      const nameFromEmail = loginEmail.trim().split('@')[0] || 'User';
+      const formattedName = result.profile?.full_name || result.user?.user_metadata?.full_name || nameFromEmail;
+      const accountRole = result.profile?.role || result.user?.user_metadata?.role;
+      const resolvedRole = accountRole === 'teacher' || accountRole === 'faculty' ? 'teacher' : 'student';
+
+      onSuccessLogin({ name: formattedName, email: loginEmail.trim(), role: resolvedRole });
+      setSuccessMessage(`Logged in as ${resolvedRole === 'teacher' ? 'Faculty Member' : 'Student'}!`);
       setTimeout(() => {
         onClose();
         setSuccessMessage('');
@@ -100,13 +104,17 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
     setIsLoading(true);
     try {
       // Force default role 'student' on signup per requirements
-      const res = await supabaseSignUp(signupEmail, signupPassword, signupName, 'student');
-      
+      const res = await supabaseSignUp(signupEmail.trim(), signupPassword, signupName.trim(), 'student');
+
       if (res?.needsEmailConfirmation) {
-        setSuccessMessage('Account created in Supabase! Please check your email inbox to confirm your email address before signing in.');
+        setSuccessMessage('Account created. Check your email inbox for the confirmation link before signing in.');
       } else {
-        onSuccessLogin({ name: signupName, email: signupEmail, role: 'student' });
-        setSuccessMessage('Account created successfully in Supabase!');
+        onSuccessLogin({
+          name: res.profile?.full_name || signupName.trim(),
+          email: signupEmail.trim(),
+          role: 'student',
+        });
+        setSuccessMessage('Account created successfully.');
         setTimeout(() => {
           onClose();
           setSuccessMessage('');
@@ -124,15 +132,36 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
     }
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
+    clearAlerts();
+
     if (!loginEmail.trim()) {
       setErrorMessage('Enter your email address to receive reset instructions.');
       return;
     }
-    setForgotPasswordSent(true);
-    setErrorMessage('');
-    setTimeout(() => setForgotPasswordSent(false), 4000);
+
+    setIsResettingPassword(true);
+    try {
+      await supabaseResetPassword(loginEmail.trim());
+      setForgotPasswordSent(true);
+    } catch (err: any) {
+      setErrorDetails({
+        message: err.message || 'Unable to send a password reset email. Please try again.',
+        status: err.status,
+        code: err.code,
+        name: err.name,
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
+
+  const shouldShowErrorDetails = Boolean(
+    errorDetails &&
+      ((errorDetails.status && errorDetails.status >= 500) ||
+        errorDetails.code === 'MISSING_ENV_VARS' ||
+        errorDetails.code === 'SUPABASE_CONNECTION_ERROR')
+  );
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md transition-all animate-in fade-in duration-200">
@@ -164,8 +193,8 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
           <button
             type="button"
             onClick={() => {
+              clearAlerts();
               setActiveTab('login');
-              setErrorMessage('');
             }}
             className={`flex-1 rounded-xl py-2 text-xs font-semibold uppercase tracking-wider transition-all ${
               activeTab === 'login'
@@ -178,8 +207,8 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
           <button
             type="button"
             onClick={() => {
+              clearAlerts();
               setActiveTab('signup');
-              setErrorMessage('');
             }}
             className={`flex-1 rounded-xl py-2 text-xs font-semibold uppercase tracking-wider transition-all ${
               activeTab === 'signup'
@@ -236,11 +265,11 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
         {errorDetails && (
           <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300 space-y-1.5">
             <div className="font-semibold text-red-200">{errorDetails.message}</div>
-            {(errorDetails.code || errorDetails.status || errorDetails.name) && (
+            {shouldShowErrorDetails && (
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-red-300/80 pt-1.5 border-t border-red-500/20 mt-1">
-                {errorDetails.code && <div><span className="text-white/40 font-mono">code:</span> {errorDetails.code}</div>}
-                {errorDetails.status && <div><span className="text-white/40 font-mono">status:</span> {errorDetails.status}</div>}
-                {errorDetails.name && <div><span className="text-white/40 font-mono">name:</span> {errorDetails.name}</div>}
+                {errorDetails?.code && <div><span className="text-white/40 font-mono">code:</span> {errorDetails.code}</div>}
+                {errorDetails?.status && <div><span className="text-white/40 font-mono">status:</span> {errorDetails.status}</div>}
+                {errorDetails?.name && <div><span className="text-white/40 font-mono">name:</span> {errorDetails.name}</div>}
               </div>
             )}
           </div>
@@ -255,7 +284,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
 
         {forgotPasswordSent && (
           <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-xs text-cyan-300">
-            Password reset link sent to <strong>{loginEmail}</strong>! Check your inbox.
+            If an account exists for <strong>{loginEmail.trim()}</strong>, a password reset link has been sent. Check your inbox.
           </div>
         )}
 
@@ -269,6 +298,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -284,6 +314,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="current-password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
@@ -313,9 +344,10 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-cyan-400 hover:underline"
+                disabled={isResettingPassword}
+                className="text-cyan-400 hover:underline disabled:opacity-50"
               >
-                Forgot password?
+                {isResettingPassword ? 'Sending reset link…' : 'Forgot password?'}
               </button>
             </div>
 
@@ -344,6 +376,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                 <input
                   type="text"
                   required
+                  autoComplete="name"
                   value={signupName}
                   onChange={(e) => setSignupName(e.target.value)}
                   placeholder="Jane Doe"
@@ -359,6 +392,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={signupEmail}
                   onChange={(e) => setSignupEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -375,6 +409,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                   <input
                     type="password"
                     required
+                    autoComplete="new-password"
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
                     placeholder="••••••••"
@@ -390,6 +425,7 @@ export function AuthModal({ isOpen, onClose, onSuccessLogin }: AuthModalProps) {
                   <input
                     type="password"
                     required
+                    autoComplete="new-password"
                     value={signupConfirmPassword}
                     onChange={(e) => setSignupConfirmPassword(e.target.value)}
                     placeholder="••••••••"

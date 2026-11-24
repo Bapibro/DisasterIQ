@@ -1,0 +1,327 @@
+.safe-routes-page {
+  min-height: calc(100vh - 6rem);
+  padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+  background: #080d11;
+  color: #eef5f5;
+  font-family: 'Inter', 'Barlow', sans-serif;
+}
+
+.safe-routes-shell {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+}
+
+.safe-routes-header > div > span {
+  color: rgba(144, 210, 212, 0.63);
+  font-size: 0.61rem;
+  font-weight: 600;
+  letter-spacing: 0.17em;
+}
+
+.safe-routes-header h1 {
+  margin: 0.6rem 0 0;
+  font-size: clamp(2.1rem, 5vw, 3.8rem);
+  font-weight: 500;
+  letter-spacing: -0.07em;
+}
+
+.safe-routes-header p {
+  max-width: 52rem;
+  margin: 0.65rem 0 1.2rem;
+  color: rgba(217, 231, 232, 0.57);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.safe-routes-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
+  gap: 1rem;
+  min-height: 35rem;
+}
+
+.safe-routes-map-panel {
+  position: relative;
+  min-height: 35rem;
+  overflow: hidden;
+  border: 1px solid rgba(201, 224, 225, 0.1);
+  border-radius: 0.8rem;
+  background: #11191d;
+}
+
+.safe-routes-map {
+  width: 100%;
+  height: 100%;
+  min-height: 35rem;
+  background: #11191d;
+}
+
+.safe-routes-map .safe-route-map-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.72) saturate(0.62) contrast(1.04);
+}
+
+.safe-routes-map .leaflet-control-attribution {
+  display: none;
+}
+
+.safe-routes-map .leaflet-popup-content-wrapper,
+.safe-routes-map .leaflet-popup-tip {
+  background: #101a1e;
+  color: #edf6f6;
+}
+
+.safe-routes-map-attribution {
+  position: absolute;
+  z-index: 500;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 0.3rem;
+  background: rgba(8, 15, 18, 0.82);
+  color: rgba(230, 241, 241, 0.7);
+  font-size: 0.55rem;
+}
+
+.safe-routes-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid rgba(201, 224, 225, 0.1);
+  border-radius: 0.8rem;
+  background: rgba(15, 23, 27, 0.9);
+}
+
+.safe-routes-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.safe-routes-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: rgba(221, 234, 235, 0.7);
+  font-size: 0.65rem;
+}
+
+.safe-route-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem;
+  border: 1px solid rgba(203, 227, 229, 0.12);
+  border-radius: 0.55rem;
+  background: rgba(3, 10, 13, 0.45);
+  color: rgba(119, 205, 207, 0.76);
+}
+
+.safe-route-input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f0f7f7;
+  font: inherit;
+  font-size: 0.69rem;
+}
+
+.safe-route-input input::placeholder {
+  color: rgba(196, 215, 216, 0.38);
+}
+
+.safe-route-location,
+.safe-route-submit {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.42rem;
+  border: 0;
+  background: transparent;
+  color: #9bdcdb;
+  font: inherit;
+  font-size: 0.64rem;
+  cursor: pointer;
+}
+
+.safe-route-location {
+  margin-top: -0.35rem;
+}
+
+.safe-route-submit {
+  width: 100%;
+  min-height: 2.55rem;
+  justify-content: center;
+  margin-top: 0.2rem;
+  border: 1px solid rgba(108, 200, 202, 0.25);
+  border-radius: 0.55rem;
+  background: rgba(45, 122, 128, 0.18);
+  color: #d3f4f2;
+  font-weight: 600;
+}
+
+.safe-route-submit:hover:not(:disabled) {
+  background: rgba(45, 122, 128, 0.31);
+}
+
+.safe-route-submit:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.safe-route-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0;
+  color: #edbd89;
+  font-size: 0.65rem;
+  line-height: 1.5;
+}
+
+.safe-route-error svg {
+  flex: 0 0 auto;
+}
+
+.safe-route-result,
+.safe-route-facilities {
+  padding: 0.8rem;
+  border: 1px solid rgba(202, 224, 225, 0.09);
+  border-radius: 0.6rem;
+  background: rgba(190, 226, 228, 0.025);
+}
+
+.safe-route-result h2,
+.safe-route-facilities h2 {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.safe-route-result > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.safe-route-result > div strong {
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.safe-route-result > div span,
+.safe-route-result > small,
+.safe-route-facilities > small {
+  color: rgba(199, 217, 218, 0.46);
+  font-size: 0.58rem;
+  line-height: 1.5;
+}
+
+.safe-route-result > small {
+  display: block;
+  margin-top: 0.6rem;
+}
+
+.safe-route-facilities p {
+  margin: 0.6rem 0;
+  color: rgba(206, 221, 222, 0.53);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+.safe-route-facilities ul {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  margin: 0.6rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.safe-route-facilities li {
+  display: grid;
+  gap: 0.18rem;
+  padding-bottom: 0.38rem;
+  border-bottom: 1px solid rgba(201, 224, 225, 0.06);
+}
+
+.safe-route-facilities li strong {
+  color: rgba(230, 241, 241, 0.83);
+  font-size: 0.63rem;
+  font-weight: 500;
+}
+
+.safe-route-facilities li span {
+  color: rgba(187, 209, 210, 0.45);
+  font-size: 0.56rem;
+}
+
+.safe-route-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(217, 165, 104, 0.19);
+  border-radius: 0.6rem;
+  background: rgba(149, 98, 42, 0.07);
+  color: rgba(227, 193, 149, 0.8);
+}
+
+.safe-route-warning svg {
+  flex: 0 0 auto;
+}
+
+.safe-route-warning p {
+  margin: 0;
+  font-size: 0.64rem;
+  line-height: 1.55;
+}
+
+.safe-route-warning a {
+  color: #ffd1a1;
+}
+
+.safe-route-sources {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  font-size: 0.61rem;
+}
+
+.safe-route-sources a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #88ccce;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .safe-routes-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .safe-routes-map-panel,
+  .safe-routes-map {
+    min-height: 26rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .safe-routes-page {
+    padding: 1.5rem 0.75rem 2rem;
+  }
+
+  .safe-routes-map-panel,
+  .safe-routes-map {
+    min-height: 22rem;
+  }
+
+  .safe-route-sources {
+    flex-direction: column;
+  }
+}

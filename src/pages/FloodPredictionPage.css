@@ -1,0 +1,773 @@
+.flood-page {
+  min-height: calc(100vh - 6rem);
+  padding: clamp(2rem, 4vw, 3.5rem) 1.25rem 3.5rem;
+  background:
+    radial-gradient(ellipse at 35% 0%, rgba(12, 72, 81, 0.16), transparent 40%),
+    linear-gradient(180deg, #080d11, #070a0e 70%, #090e12);
+  color: #eef4f4;
+  font-family: 'Inter', 'Barlow', sans-serif;
+}
+
+.flood-shell {
+  width: min(100%, 94rem);
+  margin: 0 auto;
+}
+
+.flood-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.flood-eyebrow,
+.flood-panel-heading > div > span {
+  color: rgba(144, 210, 212, 0.64);
+  font-size: 0.61rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+}
+
+.flood-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flood-eyebrow > span,
+.flood-data-meta > span > i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: #d3a660;
+}
+
+.flood-header h1 {
+  margin: 0.85rem 0 0;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-weight: 500;
+  letter-spacing: -0.075em;
+  line-height: 0.98;
+}
+
+.flood-header h1 span {
+  color: rgba(237, 245, 245, 0.5);
+}
+
+.flood-header p {
+  max-width: 46rem;
+  margin: 0.85rem 0 0;
+  color: rgba(216, 229, 230, 0.6);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.flood-refresh {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(138, 197, 201, 0.2);
+  border-radius: 0.65rem;
+  background: rgba(53, 122, 128, 0.12);
+  color: #c9eeee;
+  font: inherit;
+  font-size: 0.69rem;
+  cursor: pointer;
+}
+
+.flood-refresh:hover:not(:disabled) {
+  background: rgba(53, 122, 128, 0.22);
+}
+
+.flood-refresh:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.is-spinning {
+  animation: flood-spin 1s linear infinite;
+}
+
+@keyframes flood-spin {
+  to { transform: rotate(360deg); }
+}
+
+.flood-data-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  min-height: 2.8rem;
+  margin-top: 1.5rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(204, 230, 231, 0.08);
+  border-bottom: 1px solid rgba(204, 230, 231, 0.08);
+  color: rgba(205, 222, 223, 0.5);
+  font-size: 0.62rem;
+}
+
+.flood-data-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.flood-data-meta > span > i {
+  background: #d3a660;
+}
+
+.flood-data-meta > span.is-connected > i {
+  background: #67d4a0;
+}
+
+.flood-data-meta > a,
+.flood-source-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #89d3d4;
+  text-decoration: none;
+}
+
+.flood-data-meta > a {
+  margin-left: auto;
+}
+
+.flood-error,
+.flood-inline-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.85rem 0 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(215, 164, 103, 0.2);
+  border-radius: 0.6rem;
+  background: rgba(155, 108, 48, 0.065);
+  color: rgba(234, 196, 146, 0.85);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.flood-error svg {
+  flex: 0 0 auto;
+}
+
+.flood-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(19rem, 0.8fr);
+  align-items: stretch;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.flood-map-panel,
+.flood-panel,
+.flood-point-card {
+  min-width: 0;
+  border: 1px solid rgba(196, 224, 225, 0.1);
+  border-radius: 0.8rem;
+  background: linear-gradient(145deg, rgba(17, 26, 30, 0.96), rgba(11, 17, 21, 0.98));
+}
+
+.flood-map-panel {
+  display: flex;
+  min-height: 37rem;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.flood-panel-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.05rem 0.8rem;
+}
+
+.flood-panel-heading h2 {
+  margin: 0.32rem 0 0;
+  font-size: 1.03rem;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.flood-panel-heading > small {
+  color: rgba(196, 216, 217, 0.46);
+  font-size: 0.59rem;
+  text-align: right;
+}
+
+.flood-map {
+  z-index: 0;
+  min-height: 28rem;
+  flex: 1;
+  background: #10191c;
+  cursor: crosshair;
+}
+
+.flood-map .leaflet-tile {
+  filter: saturate(0.55) brightness(0.84);
+}
+
+.flood-map .leaflet-control-attribution {
+  font-size: 9px;
+}
+
+.flood-map-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.1rem;
+  padding: 0.7rem 0.9rem 0.4rem;
+  color: rgba(201, 220, 221, 0.49);
+  font-size: 0.57rem;
+}
+
+.flood-map-footer > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.36rem;
+}
+
+.flood-map-footer i,
+.flood-category-legend i {
+  width: 0.44rem;
+  height: 0.44rem;
+  border-radius: 50%;
+}
+
+.flood-map-footer i.is-selected { background: #34d399; }
+.flood-map-footer i.is-no-data { background: #7d8586; }
+
+.flood-category-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+  padding: 0.55rem 0.9rem 0.85rem;
+}
+
+.flood-category-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  color: rgba(220, 232, 232, 0.65);
+  font-size: 0.58rem;
+}
+
+.flood-category-legend small {
+  margin-left: auto;
+  color: rgba(190, 208, 209, 0.4);
+  font-size: 0.55rem;
+}
+
+.category-low i { background: #55c99b; }
+.category-moderate i { background: #d7bb61; }
+.category-high i { background: #e58b50; }
+.category-severe i { background: #df5b65; }
+
+.flood-side-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.flood-risk-card {
+  padding: 1rem;
+  border: 1px solid rgba(196, 224, 225, 0.11);
+  border-radius: 0.8rem;
+  background: linear-gradient(150deg, rgba(23, 36, 39, 0.98), rgba(12, 18, 22, 0.98));
+}
+
+.flood-risk-card.risk-low { border-top: 2px solid #55c99b; }
+.flood-risk-card.risk-moderate { border-top: 2px solid #d7bb61; }
+.flood-risk-card.risk-high { border-top: 2px solid #e58b50; }
+.flood-risk-card.risk-severe { border-top: 2px solid #df5b65; }
+
+.flood-risk-card__topline,
+.flood-risk-card__status {
+  display: flex;
+  align-items: center;
+}
+
+.flood-risk-card__topline {
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.flood-risk-card__topline > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(144, 210, 212, 0.63);
+  font-size: 0.54rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.flood-risk-card__status {
+  gap: 0.3rem;
+  color: rgba(200, 220, 221, 0.48);
+  font-size: 0.52rem;
+  white-space: nowrap;
+}
+
+.flood-risk-card__status i {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: #d3a660;
+}
+
+.risk-low .flood-risk-card__status i { background: #67d4a0; }
+.flood-risk-card__body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+}
+
+.flood-risk-card__body > div:first-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.flood-risk-card__label,
+.flood-risk-card__window {
+  color: rgba(203, 222, 223, 0.5);
+  font-size: 0.59rem;
+}
+
+.flood-risk-card__value {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+}
+
+.risk-low .flood-risk-card__value { color: #72d6aa; }
+.risk-moderate .flood-risk-card__value { color: #e0c96e; }
+.risk-high .flood-risk-card__value { color: #ed9a61; }
+.risk-severe .flood-risk-card__value { color: #ef737d; }
+
+.flood-risk-card__flag {
+  display: flex;
+  max-width: 8.6rem;
+  align-items: flex-start;
+  gap: 0.38rem;
+  color: rgba(238, 193, 139, 0.8);
+  font-size: 0.55rem;
+  line-height: 1.4;
+}
+
+.flood-risk-card__flag svg {
+  flex: 0 0 auto;
+}
+
+.flood-risk-card__basis {
+  margin: 0.9rem 0 0;
+  color: rgba(202, 221, 222, 0.57);
+  font-size: 0.59rem;
+  line-height: 1.5;
+}
+
+.flood-factor-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  padding: 0 0 0 0.9rem;
+  color: rgba(212, 228, 229, 0.69);
+  font-size: 0.59rem;
+  line-height: 1.45;
+}
+
+.flood-model-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(201, 222, 223, 0.08);
+  color: rgba(215, 188, 135, 0.76);
+  font-size: 0.54rem;
+}
+
+.flood-point-card {
+  flex: 1;
+  padding-bottom: 0.9rem;
+}
+
+.flood-point-coordinates {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 1rem 0.75rem;
+  color: #cde7e7;
+  font-size: 0.68rem;
+}
+
+.flood-point-detail {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(197, 226, 228, 0.08);
+  border-radius: 0.6rem;
+  background: rgba(182, 224, 226, 0.025);
+}
+
+.flood-point-detail > span,
+.flood-point-detail > small {
+  color: rgba(203, 222, 223, 0.5);
+  font-size: 0.57rem;
+}
+
+.flood-point-detail > strong {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.flood-point-note {
+  margin: 0.7rem 1rem 0;
+  color: rgba(198, 218, 219, 0.47);
+  font-size: 0.57rem;
+  line-height: 1.5;
+}
+
+.flood-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+
+.flood-metric {
+  display: grid;
+  grid-template-columns: 1.35rem 1fr;
+  align-items: center;
+  gap: 0.28rem 0.5rem;
+  min-width: 0;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid rgba(196, 224, 225, 0.09);
+  border-radius: 0.7rem;
+  background: rgba(17, 26, 30, 0.85);
+}
+
+.flood-metric__icon {
+  grid-row: span 3;
+  align-self: start;
+  padding-top: 0.05rem;
+  color: #77cfd0;
+}
+
+.flood-metric__label,
+.flood-metric__detail {
+  color: rgba(203, 222, 223, 0.5);
+  font-size: 0.56rem;
+}
+
+.flood-metric > strong {
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.flood-metric > strong small {
+  margin-left: 0.15rem;
+  color: rgba(213, 231, 232, 0.52);
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.flood-metric__detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flood-panel {
+  margin-top: 0.9rem;
+  padding-bottom: 0.7rem;
+}
+
+.flood-rain-chart {
+  padding: 0 1.05rem;
+}
+
+.flood-rain-chart__bars {
+  display: grid;
+  grid-template-columns: repeat(48, minmax(0, 1fr));
+  align-items: end;
+  gap: 2px;
+  height: 8rem;
+  min-width: 30rem;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(202, 222, 223, 0.12);
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(25% - 1px), rgba(202, 222, 223, 0.045) calc(25% - 1px), rgba(202, 222, 223, 0.045) 25%);
+}
+
+.flood-rain-chart {
+  overflow-x: auto;
+}
+
+.flood-rain-chart__bar {
+  display: block;
+  min-height: 1px;
+  border-radius: 3px 3px 0 0;
+  background: #4aa7ae;
+}
+
+.flood-rain-chart__bar.is-forecast {
+  background: #78c9c9;
+  opacity: 0.7;
+}
+
+.flood-rain-chart__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.45rem;
+  color: rgba(202, 220, 221, 0.43);
+  font-size: 0.54rem;
+}
+
+.flood-rain-chart__labels strong {
+  color: rgba(216, 231, 232, 0.64);
+  font-weight: 500;
+}
+
+.flood-chart-legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.7rem;
+  color: rgba(203, 221, 222, 0.51);
+  font-size: 0.55rem;
+}
+
+.flood-chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.flood-chart-legend i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: #4aa7ae;
+}
+
+.flood-chart-legend i.is-forecast {
+  background: #78c9c9;
+}
+
+.flood-daily-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(2.3rem, 1fr));
+  gap: 0.5rem;
+  min-height: 8rem;
+  padding: 0.45rem 1.05rem 0;
+}
+
+.flood-daily-chart__day {
+  display: grid;
+  grid-template-rows: 1rem minmax(2.8rem, 1fr) 1rem;
+  justify-items: center;
+  gap: 0.36rem;
+  color: rgba(207, 225, 226, 0.55);
+  font-size: 0.57rem;
+}
+
+.flood-daily-chart__day > div {
+  display: flex;
+  width: min(1.1rem, 60%);
+  height: 100%;
+  align-items: flex-end;
+  border-radius: 0.4rem;
+  background: rgba(178, 222, 224, 0.055);
+}
+
+.flood-daily-chart__day > div i {
+  display: block;
+  width: 100%;
+  min-height: 2px;
+  border-radius: 0.4rem;
+  background: linear-gradient(180deg, #7be0dc, #338aa8);
+}
+
+.flood-daily-chart__day strong {
+  color: rgba(224, 240, 240, 0.76);
+  font-weight: 500;
+}
+
+.flood-daily-chart__day strong small {
+  color: rgba(203, 222, 223, 0.45);
+  font-weight: 400;
+}
+
+.flood-empty,
+.flood-footnote {
+  color: rgba(200, 219, 220, 0.48);
+  font-size: 0.59rem;
+  line-height: 1.5;
+}
+
+.flood-empty {
+  margin: 1.4rem 1rem;
+}
+
+.flood-footnote {
+  margin: 0.7rem 1.05rem 0;
+}
+
+.flood-data-limit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(215, 164, 103, 0.16);
+  border-radius: 0.7rem;
+  background: rgba(155, 108, 48, 0.045);
+  color: rgba(235, 203, 161, 0.76);
+}
+
+.flood-data-limit > svg {
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+}
+
+.flood-data-limit strong {
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.flood-data-limit p {
+  margin: 0.35rem 0 0;
+  color: rgba(225, 211, 191, 0.62);
+  font-size: 0.6rem;
+  line-height: 1.55;
+}
+
+.flood-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.65rem;
+  font-size: 0.58rem;
+}
+
+.flood-source-stamp {
+  margin: 0.7rem 0 0;
+  color: rgba(194, 212, 213, 0.37);
+  font-size: 0.55rem;
+  text-align: right;
+}
+
+@media (max-width: 1000px) {
+  .flood-dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .flood-map-panel {
+    min-height: 34rem;
+  }
+
+  .flood-side-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 650px) {
+  .flood-page {
+    padding: 1.8rem 0.8rem 2.6rem;
+  }
+
+  .flood-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .flood-header h1 {
+    font-size: clamp(2.2rem, 12vw, 3.5rem);
+  }
+
+  .flood-data-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .flood-data-meta > a {
+    margin-left: 0;
+  }
+
+  .flood-dashboard-grid {
+    gap: 0.7rem;
+  }
+
+  .flood-map-panel {
+    min-height: 30rem;
+  }
+
+  .flood-map {
+    min-height: 22rem;
+  }
+
+  .flood-map-footer,
+  .flood-category-legend {
+    gap: 0.55rem 0.75rem;
+  }
+
+  .flood-category-legend small {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .flood-side-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .flood-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .flood-metric {
+    padding: 0.65rem 0.55rem;
+  }
+
+  .flood-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .flood-panel-heading > small {
+    text-align: left;
+  }
+
+  .flood-rain-chart__labels strong {
+    font-size: 0.48rem;
+  }
+
+  .flood-rain-chart__bars {
+    min-width: 26rem;
+  }
+
+  .flood-source-stamp {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-spinning {
+    animation: none;
+  }
+}

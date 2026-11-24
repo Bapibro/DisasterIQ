@@ -20,6 +20,7 @@ import {
   Download,
   Activity,
   Trash2,
+  Map as MapIcon,
 } from 'lucide-react';
 import { GlassCard } from '../components/GlassCard';
 
@@ -322,6 +323,7 @@ export function TeacherDashboard() {
     { label: 'Emergency Drills', icon: Calendar, action: () => setActiveTab('drills'), active: activeTab === 'drills' },
     { label: 'Campus Safety', icon: Building, action: () => navigate('/campus') },
     { label: 'Resources & SOPs', icon: FileText, action: () => setActiveTab('resources'), active: activeTab === 'resources' },
+    { label: 'Live Monitoring', icon: MapIcon, action: () => navigate('/live-monitoring') },
     { label: 'Profile', icon: User, action: () => navigate('/profile') },
     { label: 'Settings', icon: Settings, action: () => navigate('/profile') },
   ];

@@ -15,9 +15,24 @@ import { DisasterArchives } from './pages/DisasterArchives';
 import { ProfilePage } from './pages/ProfilePage';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { TeacherDashboard } from './pages/TeacherDashboard';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { AuthProvider } from './context/AuthContext';
 
 const LiveMonitoringPage = lazy(() => import('./pages/LiveMonitoringPage'));
+const FloodPredictionPage = lazy(() => import('./pages/FloodPredictionPage'));
+const OperationalModulePage = lazy(() => import('./pages/OperationalModulePage'));
+const WeatherHazardModulePage = lazy(() => import('./pages/WeatherHazardModulePage'));
+const SafeRoutesPage = lazy(() => import('./pages/SafeRoutesPage'));
+
+const operationalRoutes = [
+  '/incident-reporting',
+  '/emergency-alerts',
+  '/response-center',
+  '/offline-emergency',
+  '/ai-intelligence',
+];
+
+const weatherHazardRoutes = ['/heatwave-monitoring', '/storm-monitoring'];
 
 function AppShell() {
   return (
@@ -38,6 +53,7 @@ function AppShell() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/teacher" element={<TeacherDashboard />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
               path="/live-monitoring"
               element={
@@ -46,6 +62,44 @@ function AppShell() {
                 </Suspense>
               }
             />
+            <Route
+              path="/flood-prediction"
+              element={
+                <Suspense fallback={<div className="min-h-[60vh] bg-[#080d11] px-8 py-16 text-sm text-white/60">Loading flood intelligence…</div>}>
+                  <FloodPredictionPage />
+                </Suspense>
+              }
+            />
+            {weatherHazardRoutes.map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <Suspense fallback={<div className="min-h-[60vh] bg-[#080d11] px-8 py-16 text-sm text-white/60">Loading weather intelligence…</div>}>
+                    <WeatherHazardModulePage />
+                  </Suspense>
+                }
+              />
+            ))}
+            <Route
+              path="/safe-routes"
+              element={
+                <Suspense fallback={<div className="min-h-[60vh] bg-[#080d11] px-8 py-16 text-sm text-white/60">Loading route planner…</div>}>
+                  <SafeRoutesPage />
+                </Suspense>
+              }
+            />
+            {operationalRoutes.map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <Suspense fallback={<div className="min-h-[60vh] bg-[#080d11] px-8 py-16 text-sm text-white/60">Loading module…</div>}>
+                    <OperationalModulePage />
+                  </Suspense>
+                }
+              />
+            ))}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </PageTransition>
