@@ -37,49 +37,151 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
   gap: 1rem;
-  min-height: 35rem;
+  min-height: clamp(35rem, calc(100vh - 13rem), 48rem);
 }
 
 .safe-routes-map-panel {
   position: relative;
-  min-height: 35rem;
+  min-height: clamp(35rem, calc(100vh - 13rem), 48rem);
   overflow: hidden;
-  border: 1px solid rgba(201, 224, 225, 0.1);
+  border: 1px solid rgba(201, 224, 225, 0.14);
   border-radius: 0.8rem;
-  background: #11191d;
+  background: #e9edf0;
 }
 
 .safe-routes-map {
   width: 100%;
   height: 100%;
-  min-height: 35rem;
-  background: #11191d;
-}
-
-.safe-routes-map .safe-route-map-tiles {
-  filter: invert(1) hue-rotate(180deg) brightness(0.72) saturate(0.62) contrast(1.04);
+  min-height: inherit;
+  background: #e9edf0;
 }
 
 .safe-routes-map .leaflet-control-attribution {
-  display: none;
+  padding: 0.18rem 0.35rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: #52616a;
+  font-size: 0.56rem;
+}
+
+.safe-routes-map .leaflet-control-attribution a {
+  color: #246b77;
 }
 
 .safe-routes-map .leaflet-popup-content-wrapper,
 .safe-routes-map .leaflet-popup-tip {
-  background: #101a1e;
-  color: #edf6f6;
+  background: #ffffff;
+  color: #17252c;
 }
 
-.safe-routes-map-attribution {
+.safe-routes-map .leaflet-popup-content-wrapper {
+  border-radius: 0.55rem;
+  box-shadow: 0 8px 28px rgba(20, 38, 45, 0.2);
+}
+
+.safe-routes-map .leaflet-popup-content {
+  margin: 0.7rem 0.85rem;
+  font-family: 'Inter', 'Barlow', sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.safe-routes-map .leaflet-container a.leaflet-popup-close-button {
+  color: #52616a;
+}
+
+.safe-route-marker {
+  background: transparent;
+  border: 0;
+}
+
+.safe-route-marker svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.safe-route-marker path {
+  fill: currentColor;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.safe-route-marker circle {
+  fill: #ffffff;
+}
+
+.safe-route-marker text {
+  fill: currentColor;
+  font-family: 'Inter', 'Barlow', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.safe-route-marker--origin {
+  color: #0f766e;
+}
+
+.safe-route-marker--destination {
+  color: #c2413b;
+}
+
+.safe-route-map-status {
   position: absolute;
-  z-index: 500;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  padding: 0.28rem 0.4rem;
-  border-radius: 0.3rem;
-  background: rgba(8, 15, 18, 0.82);
-  color: rgba(230, 241, 241, 0.7);
-  font-size: 0.55rem;
+  z-index: 900;
+  top: 0.75rem;
+  left: 50%;
+  display: flex;
+  width: max-content;
+  max-width: calc(100% - 6rem);
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(97, 119, 128, 0.2);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 5px 18px rgba(20, 38, 45, 0.12);
+  color: #334b55;
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.safe-route-map-status svg {
+  flex: 0 0 auto;
+}
+
+.safe-route-map-status--error {
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.safe-route-map-status button {
+  margin-left: 0.15rem;
+  padding: 0 0 0 0.55rem;
+  border: 0;
+  border-left: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.safe-route-map-spinner {
+  animation: safe-route-spin 0.9s linear infinite;
+}
+
+@keyframes safe-route-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .safe-route-map-spinner {
+    animation: none;
+  }
 }
 
 .safe-routes-sidebar {

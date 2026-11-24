@@ -1,4 +1,4 @@
-const CACHE_NAME = 'disasteriq-offline-v3';
+const CACHE_NAME = 'disasteriq-offline-v4';
 const PUBLIC_ROUTES = new Set(['/', '/index.html', '/offline-emergency', '/guide']);
 const PUBLIC_ASSETS = new Set([
   '/manifest.webmanifest',
@@ -32,6 +32,16 @@ const isSafeResponse = (response) => {
   return !response.headers.has('set-cookie');
 };
 
+const removeStaleExternalCacheEntries = async () => {
+  const cache = await caches.open(CACHE_NAME);
+  const requests = await cache.keys();
+  await Promise.all(
+    requests
+      .filter((request) => new URL(request.url).origin !== self.location.origin)
+      .map((request) => cache.delete(request)),
+  );
+};
+
 const cacheAppShell = async () => {
   const cache = await caches.open(CACHE_NAME);
   const response = await fetch(new Request('/', { cache: 'reload', credentials: 'omit' }));
@@ -61,6 +71,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.filter((key) => key.startsWith('disasteriq-offline-') && key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => removeStaleExternalCacheEntries())
       .then(() => self.clients.claim())
   );
 });

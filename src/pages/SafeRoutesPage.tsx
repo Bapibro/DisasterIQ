@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { AlertTriangle, ExternalLink, LocateFixed, MapPin, Route, Search } from 'lucide-react';
+import { AlertTriangle, ExternalLink, LoaderCircle, LocateFixed, MapPin, Route, Search } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './SafeRoutesPage.css';
 
@@ -23,6 +23,24 @@ type OSMFacility = {
   lon: number;
   tags: { name?: string; amenity?: string };
 };
+
+const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+const ORIGIN_MARKER_ICON = L.divIcon({
+  className: 'safe-route-marker safe-route-marker--origin',
+  html: '<svg viewBox="0 0 32 42" aria-hidden="true"><path d="M16 1C8.27 1 2 7.27 2 15c0 10 14 25 14 25s14-15 14-25C30 7.27 23.73 1 16 1Z"/><circle cx="16" cy="15" r="9"/><text x="16" y="19">A</text></svg>',
+  iconSize: [32, 42],
+  iconAnchor: [16, 40],
+  popupAnchor: [0, -38],
+});
+
+const DESTINATION_MARKER_ICON = L.divIcon({
+  className: 'safe-route-marker safe-route-marker--destination',
+  html: '<svg viewBox="0 0 32 42" aria-hidden="true"><path d="M16 1C8.27 1 2 7.27 2 15c0 10 14 25 14 25s14-15 14-25C30 7.27 23.73 1 16 1Z"/><circle cx="16" cy="15" r="9"/><text x="16" y="19">B</text></svg>',
+  iconSize: [32, 42],
+  iconAnchor: [16, 40],
+  popupAnchor: [0, -38],
+});
 
 function isCoordinate(value: unknown): value is [number, number] {
   return Array.isArray(value) &&
@@ -148,7 +166,7 @@ function FacilityMarkers({ facilities }: { facilities: OSMFacility[] }) {
           key={facility.id}
           center={[facility.lat, facility.lon]}
           radius={5}
-          pathOptions={{ color: '#f0be79', fillColor: '#f0be79', fillOpacity: 0.9, weight: 1 }}
+          pathOptions={{ color: '#ffffff', fillColor: '#d97706', fillOpacity: 1, weight: 2 }}
         >
           <Popup>
             <strong>{facility.tags.name || 'Unnamed mapped facility'}</strong>
@@ -171,6 +189,8 @@ export default function SafeRoutesPage() {
   const [facilityError, setFacilityError] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [tileStatus, setTileStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [tileLayerVersion, setTileLayerVersion] = useState(0);
   const lastGeocodeAtRef = useRef(0);
 
   const locateOrigin = () => {
@@ -252,18 +272,56 @@ export default function SafeRoutesPage() {
             <MapContainer center={[21.1458, 79.0882]} zoom={12} scrollWheelZoom className="safe-routes-map">
               <RouteMapController route={route} />
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                subdomains="abc"
+                key={tileLayerVersion}
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+                url={OSM_TILE_URL}
+                subdomains={['a', 'b', 'c']}
                 maxZoom={19}
-                className="safe-route-map-tiles"
+                eventHandlers={{
+                  loading: () => setTileStatus('loading'),
+                  load: () => setTileStatus((current) => current === 'error' ? 'error' : 'ready'),
+                  tileerror: () => setTileStatus('error'),
+                }}
               />
-              {route && <Polyline positions={routePositions} pathOptions={{ color: '#57c6cc', weight: 5, opacity: 0.86 }} />}
-              {origin && <Marker position={[origin.latitude, origin.longitude]}><Popup>Origin: {origin.label}</Popup></Marker>}
-              {destination && <Marker position={[destination.latitude, destination.longitude]}><Popup>Destination: {destination.label}</Popup></Marker>}
+              {route && (
+                <>
+                  <Polyline positions={routePositions} pathOptions={{ color: '#ffffff', weight: 10, opacity: 0.9 }} />
+                  <Polyline positions={routePositions} pathOptions={{ color: '#087f8c', weight: 6, opacity: 0.96 }} />
+                </>
+              )}
+              {origin && (
+                <Marker
+                  position={[origin.latitude, origin.longitude]}
+                  icon={ORIGIN_MARKER_ICON}
+                  title="Origin"
+                  alt="Origin marker"
+                  zIndexOffset={1000}
+                >
+                  <Popup>Origin: {origin.label}</Popup>
+                </Marker>
+              )}
+              {destination && (
+                <Marker
+                  position={[destination.latitude, destination.longitude]}
+                  icon={DESTINATION_MARKER_ICON}
+                  title="Destination"
+                  alt="Destination marker"
+                  zIndexOffset={1000}
+                >
+                  <Popup>Destination: {destination.label}</Popup>
+                </Marker>
+              )}
               <FacilityMarkers facilities={facilities} />
             </MapContainer>
-            <div className="safe-routes-map-attribution">Map data © OpenStreetMap contributors</div>
+            {(tileStatus === 'loading' || tileStatus === 'error') && (
+              <div className={`safe-route-map-status safe-route-map-status--${tileStatus}`} role={tileStatus === 'error' ? 'alert' : 'status'} aria-live="polite">
+                {tileStatus === 'loading' ? <LoaderCircle size={16} className="safe-route-map-spinner" /> : <AlertTriangle size={16} />}
+                <span>{tileStatus === 'loading' ? 'Loading street map…' : 'Some map tiles could not load. Check your connection.'}</span>
+                {tileStatus === 'error' && (
+                  <button type="button" onClick={() => { setTileStatus('loading'); setTileLayerVersion((version) => version + 1); }}>Retry</button>
+                )}
+              </div>
+            )}
           </div>
 
           <aside className="safe-routes-sidebar">
